@@ -15,6 +15,7 @@ struct OverlayToolbar: View {
     @Binding var style: MarkerStyle
     let history: HistoryPosition
     let onNavigate: (Int) -> Void
+    let onCopy: () -> Void
     let onSend: () -> Void
 
     var body: some View {
@@ -25,12 +26,18 @@ struct OverlayToolbar: View {
             }
             StyleControls(style: $style)
             Divider().frame(height: 22)
+            // The shortcuts for these live on the overlay, which stays put while the toolbar redraws.
+            Button(action: onCopy) {
+                Label("Copy", systemImage: "doc.on.doc")
+            }
+            .buttonStyle(CapsuleButtonStyle())
+            .disabled(!hasMarkers)
+            .help("Copy the annotated image (⌘C)")
             Button(action: onSend) {
                 Label("Claude", systemImage: "paperplane.fill")
             }
-            .buttonStyle(SendButtonStyle())
+            .buttonStyle(CapsuleButtonStyle(isProminent: true))
             .disabled(!hasMarkers)
-            // Its shortcut lives on the overlay, which stays put while the toolbar redraws.
             .help("Send to a new Claude Code chat")
         }
         .padding(8)
@@ -139,31 +146,41 @@ private struct StyleControls: View {
     }
 }
 
-/// An accent-coloured capsule that lightens on hover and darkens when pressed.
-private struct SendButtonStyle: ButtonStyle {
+/// A capsule button that lightens on hover and darkens when pressed. The prominent one is accent-coloured.
+private struct CapsuleButtonStyle: ButtonStyle {
+    var isProminent = false
+
     func makeBody(configuration: Configuration) -> some View {
-        StyledButton(configuration: configuration)
+        StyledButton(configuration: configuration, isProminent: isProminent)
     }
 
     private struct StyledButton: View {
         let configuration: ButtonStyleConfiguration
+        let isProminent: Bool
         @Environment(\.isEnabled) private var isEnabled
         @State private var isHovering = false
 
         var body: some View {
-            let lift = configuration.isPressed ? -0.08 : (isHovering ? 0.1 : 0)
             configuration.label
-                .font(.body.weight(.semibold))
-                .foregroundStyle(.white)
+                .font(.body.weight(isProminent ? .semibold : .regular))
+                .foregroundStyle(isProminent ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .background(Capsule().fill(Color.accentColor.mix(with: lift >= 0 ? .white : .black, by: abs(lift))))
+                .background(Capsule().fill(fill))
                 .scaleEffect(configuration.isPressed ? 0.97 : 1)
                 .opacity(isEnabled ? 1 : 0.4)
                 .contentShape(Capsule())
                 .onHover { isHovering = $0 && isEnabled }
                 .animation(.easeOut(duration: 0.12), value: isHovering)
                 .animation(.easeOut(duration: 0.08), value: configuration.isPressed)
+        }
+
+        private var fill: AnyShapeStyle {
+            if isProminent {
+                let lift = configuration.isPressed ? -0.08 : (isHovering ? 0.1 : 0)
+                return AnyShapeStyle(Color.accentColor.mix(with: lift >= 0 ? .white : .black, by: abs(lift)))
+            }
+            return AnyShapeStyle(Color.primary.opacity(configuration.isPressed ? 0.18 : (isHovering ? 0.13 : 0.07)))
         }
     }
 }

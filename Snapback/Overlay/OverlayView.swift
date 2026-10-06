@@ -6,6 +6,7 @@ import SwiftUI
 struct OverlayView: View {
     @Bindable var session: AnnotationSession
     let onSend: () -> Void
+    let onCopy: () -> Void
     let onSave: () -> Void
     let onDiscard: () -> Void
     /// Steps to an older (+1) or newer (−1) capture in history.
@@ -27,10 +28,11 @@ struct OverlayView: View {
     }
 
     /// `animatesIn` fades the backdrop in when the overlay first opens, but not when stepping through history.
-    init(session: AnnotationSession, animatesIn: Bool, onSend: @escaping () -> Void, onSave: @escaping () -> Void,
+    init(session: AnnotationSession, animatesIn: Bool, onSend: @escaping () -> Void, onCopy: @escaping () -> Void, onSave: @escaping () -> Void,
          onDiscard: @escaping () -> Void, onNavigate: @escaping (Int) -> Void) {
         self.session = session
         self.onSend = onSend
+        self.onCopy = onCopy
         self.onSave = onSave
         self.onDiscard = onDiscard
         self.onNavigate = onNavigate
@@ -69,7 +71,7 @@ struct OverlayView: View {
             }
 
             OverlayToolbar(hasMarkers: !session.markers.isEmpty, style: $session.style, history: historyPosition,
-                           onNavigate: onNavigate, onSend: onSend)
+                           onNavigate: onNavigate, onCopy: onCopy, onSend: onSend)
                 .onGeometryChange(for: CGSize.self, of: \.size) { toolbarSize = $0 }
                 .offset(toolbarOffset)
         }
@@ -83,6 +85,7 @@ struct OverlayView: View {
                 Button("", action: { undo(redo: true) }).keyboardShortcut("z", modifiers: [.command, .shift])
                 Button("", action: discardKey).globalKeyboardShortcut(.discard)
                 Button("", action: { if !session.markers.isEmpty { onSend() } }).globalKeyboardShortcut(.send)
+                Button("", action: copyKey).keyboardShortcut("c")
                 Button("", action: { if historyPosition.hasOlder { onNavigate(1) } }).keyboardShortcut("[")
                 Button("", action: { if historyPosition.hasNewer { onNavigate(-1) } }).keyboardShortcut("]")
             }
@@ -199,6 +202,15 @@ struct OverlayView: View {
             onDiscard()
         } else {
             onSave()
+        }
+    }
+
+    /// ⌘C copies the selected text while typing a note; otherwise it copies the annotated image.
+    private func copyKey() {
+        if focus == .note {
+            NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
+        } else if !session.markers.isEmpty {
+            onCopy()
         }
     }
 

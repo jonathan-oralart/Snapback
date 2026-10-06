@@ -26,6 +26,7 @@ struct SettingsView: View {
 
             Section {
                 KeyboardShortcuts.Recorder("Send to Claude", name: .send)
+                FixedShortcut("Copy image", keys: "⌘C")
                 KeyboardShortcuts.Recorder("Close without saving", name: .discard)
                 FixedShortcut("Marker size", keys: "−  +")
                 FixedShortcut("Delete selected marker", keys: "⌫")

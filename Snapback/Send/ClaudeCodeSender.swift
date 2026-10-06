@@ -8,7 +8,7 @@ enum ClaudeCodeSender {
     private static let pasteDelay = Duration.seconds(1)
 
     static func send(_ png: Data) async {
-        putImageOnPasteboard(png)
+        Clipboard.copy(png: png)
 
         // Bring Claude to the front with the new session, rather than leaving the previous app focused.
         let configuration = NSWorkspace.OpenConfiguration()
@@ -26,16 +26,6 @@ enum ClaudeCodeSender {
             return
         }
         pressCommandV()
-    }
-
-    private static func putImageOnPasteboard(_ png: Data) {
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        pasteboard.declareTypes([.png, .tiff], owner: nil)
-        pasteboard.setData(png, forType: .png)
-        if let tiff = NSImage(data: png)?.tiffRepresentation {
-            pasteboard.setData(tiff, forType: .tiff)
-        }
     }
 
     private static func waitForClaudeInFront() async -> Bool {

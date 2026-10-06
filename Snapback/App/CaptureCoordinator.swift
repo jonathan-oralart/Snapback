@@ -32,8 +32,9 @@ final class CaptureCoordinator {
         let view = OverlayView(
             session: session,
             animatesIn: panel == nil,
-            onSend: { [weak self] in self?.close(session, sending: true) },
-            onSave: { [weak self] in self?.close(session, sending: false) },
+            onSend: { [weak self] in self?.close(session, to: .claude) },
+            onCopy: { [weak self] in self?.close(session, to: .clipboard) },
+            onSave: { [weak self] in self?.close(session, to: .recent) },
             onDiscard: { [weak self] in self?.dismiss() },
             onNavigate: { [weak self] step in self?.navigate(from: session, by: step) }
         )
@@ -65,10 +66,14 @@ final class CaptureCoordinator {
         }
     }
 
-    /// Saves the capture to Recent, and sends it to Claude Code if asked.
-    private func close(_ session: AnnotationSession, sending: Bool) {
+    /// Where a capture goes when the overlay closes. It's always kept in Recent as well.
+    private enum Destination {
+        case recent, claude, clipboard
+    }
+
+    private func close(_ session: AnnotationSession, to destination: Destination) {
         guard !session.markers.isEmpty else { return }
-        guard sending || session.hasChanges else {
+        guard destination != .recent || session.hasChanges else {
             dismiss()
             return
         }
@@ -78,8 +83,10 @@ final class CaptureCoordinator {
             await Task.yield()
             let png = FeedbackImage.png(for: session)
             CaptureStore.shared.save(session, png: png)
-            if sending {
-                await ClaudeCodeSender.send(png)
+            switch destination {
+            case .recent: break
+            case .claude: await ClaudeCodeSender.send(png)
+            case .clipboard: Clipboard.copy(png: png)
             }
         }
     }

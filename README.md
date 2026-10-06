@@ -24,6 +24,7 @@ Requires macOS 26.4 and the [Claude desktop app](https://claude.ai/download). On
 | Delete a marker | Select it, then ⌫ |
 | Older / newer capture | ← → |
 | Send to Claude | ⌘↩ |
+| Copy the annotated image | ⌘C |
 | Close and save | Esc, or click outside the screenshot |
 | Close without saving | ⌘⌫ |
 
