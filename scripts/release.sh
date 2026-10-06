@@ -64,4 +64,6 @@ XML
 echo "› Publishing v$VERSION"
 git tag "v$VERSION" && git push origin "v$VERSION"
 gh release create "v$VERSION" "$DMG" "$OUT/appcast.xml" --repo "$REPO" --title "Snapback $VERSION" --generate-notes
+# Remove the loose app copies so macOS never opens one of these instead of the installed app.
+rm -rf "$OUT/Snapback.app" "$STAGE"
 echo "Done: https://github.com/$REPO/releases/tag/v$VERSION"
