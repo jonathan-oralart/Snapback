@@ -32,25 +32,34 @@ enum Permission: CaseIterable, Identifiable {
 
     static var allGranted: Bool { allCases.allSatisfy(\.isGranted) }
 
-    /// Adds Snapback to the System Settings list, then opens that list.
     func request() {
         let pane: String
         switch self {
+         /// Asks macOS for the permission, landing in the right System Settings list.
+    func request() {
+        switch self {
         case .screenRecording:
-            CGRequestScreenCaptureAccess()
-            pane = "Privacy_ScreenCapture"
+            // The first request shows macOS's own dialog, which has its own "Open System Settings" button;
+            // opening Settings as well would leave that dialog asking again afterwards. macOS only shows it
+            // once, so later requests go straight to Settings.
+            let key = "requestedScreenRecording"
+            if !UserDefaults.standard.bool(forKey: key) {
+                UserDefaults.standard.set(true, forKey: key)
+                CGRequestScreenCaptureAccess()
+                return
+            }
+            openSettings("Privacy_ScreenCapture")
         case .accessibility:
+            // Adds Snapback to the list without macOS's prompt, then opens the list.
             AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": false] as CFDictionary)
-            pane = "Privacy_Accessibility"
+            openSettings("Privacy_Accessibility")
         }
+    }
+
+    private func openSettings(_ pane: String) {
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?\(pane)")!)
     }
-}
-
-enum PermissionsWindow {
-    private static var window: NSWindow?
-
-    static func showIfNeeded() {
+ static func showIfNeeded() {
         guard !Permission.allGranted else { return }
         if window == nil {
             let window = NSWindow(contentViewController: NSHostingController(rootView: PermissionsView()))
