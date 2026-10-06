@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		78A9B9B5D01750ACEDD33817 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 947E5678A2F7C61C984BDFBA /* KeyboardShortcuts */; };
 		A183B7F2E8B8CD8C6641BAA4 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 4787278A15ACDD78A7D4DD5B /* Sparkle */; };
+		C62A1D0932927CA055366D8B /* PermissionFlow in Frameworks */ = {isa = PBXBuildFile; productRef = D23BD770418C835CB4BC5149 /* PermissionFlow */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +35,7 @@
 			files = (
 				78A9B9B5D01750ACEDD33817 /* KeyboardShortcuts in Frameworks */,
 				A183B7F2E8B8CD8C6641BAA4 /* Sparkle in Frameworks */,
+				C62A1D0932927CA055366D8B /* PermissionFlow in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +80,7 @@
 			packageProductDependencies = (
 				947E5678A2F7C61C984BDFBA /* KeyboardShortcuts */,
 				4787278A15ACDD78A7D4DD5B /* Sparkle */,
+				D23BD770418C835CB4BC5149 /* PermissionFlow */,
 			);
 			productName = Snapback;
 			productReference = BB408EC3FAF42A462370021B /* Snapback.app */;
@@ -109,6 +112,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				D405884F7027A9D3240ACFA6 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+				4B30AB535BAE970DF3A285B3 /* XCRemoteSwiftPackageReference "PermissionFlow" */,
 				035170B9210E5D19EE465362 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -351,6 +355,14 @@
 				minimumVersion = 2.6.0;
 			};
 		};
+		4B30AB535BAE970DF3A285B3 /* XCRemoteSwiftPackageReference "PermissionFlow" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/jaywcjlove/PermissionFlow";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 		D405884F7027A9D3240ACFA6 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
@@ -371,6 +383,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D405884F7027A9D3240ACFA6 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
 			productName = KeyboardShortcuts;
+		};
+		D23BD770418C835CB4BC5149 /* PermissionFlow */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4B30AB535BAE970DF3A285B3 /* XCRemoteSwiftPackageReference "PermissionFlow" */;
+			productName = PermissionFlow;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

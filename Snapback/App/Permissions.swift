@@ -1,5 +1,6 @@
 import AppKit
 import ApplicationServices
+import PermissionFlow
 import SwiftUI
 
 /// What Snapback needs from macOS: capture to see the window, Accessibility to paste into Claude.
@@ -32,29 +33,12 @@ enum Permission: CaseIterable, Identifiable {
 
     static var allGranted: Bool { allCases.allSatisfy(\.isGranted) }
 
-    /// Asks macOS for the permission, landing in the right System Settings list.
-    func request() {
+    /// The System Settings list PermissionFlow opens, with a panel to drag Snapback into it.
+    var flowPane: PermissionFlowPane {
         switch self {
-        case .screenRecording:
-            // The first request shows macOS's own dialog, which has its own "Open System Settings" button;
-            // opening Settings as well would leave that dialog asking again afterwards. macOS only shows it
-            // once, so later requests go straight to Settings.
-            let key = "requestedScreenRecording"
-            if !UserDefaults.standard.bool(forKey: key) {
-                UserDefaults.standard.set(true, forKey: key)
-                CGRequestScreenCaptureAccess()
-                return
-            }
-            openSettings("Privacy_ScreenCapture")
-        case .accessibility:
-            // Adds Snapback to the list without macOS's prompt, then opens the list.
-            AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": false] as CFDictionary)
-            openSettings("Privacy_Accessibility")
+        case .screenRecording: .screenRecording
+        case .accessibility: .accessibility
         }
-    }
-
-    private func openSettings(_ pane: String) {
-        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?\(pane)")!)
     }
 }
 
@@ -82,6 +66,8 @@ enum PermissionsWindow {
 private struct PermissionsView: View {
     @State private var granted: [Permission: Bool] = [:]
     @State private var requestedScreenRecording = false
+    /// Opens the right System Settings list beside a small panel you drag Snapback from into the list.
+    @StateObject private var flow = PermissionFlow.makeController()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -98,7 +84,12 @@ private struct PermissionsView: View {
                     if granted[permission] != true {
                         Button("Open Settings") {
                             if permission == .screenRecording { requestedScreenRecording = true }
-                            permission.request()
+                            let mouse = NSEvent.mouseLocation
+                            flow.authorize(
+                                pane: permission.flowPane,
+                                suggestedAppURLs: [Bundle.main.bundleURL],
+                                sourceFrameInScreen: CGRect(x: mouse.x - 16, y: mouse.y - 16, width: 32, height: 32)
+                            )
                         }
                     }
                 }
@@ -116,7 +107,10 @@ private struct PermissionsView: View {
 
             HStack {
                 Spacer()
-                Button("Done") { PermissionsWindow.close() }
+                Button("Done") {
+                    flow.closePanel()
+                    PermissionsWindow.close()
+                }
                     .keyboardShortcut(.defaultAction)
                     .disabled(granted.values.contains(false))
             }
@@ -126,7 +120,12 @@ private struct PermissionsView: View {
         .task {
             // System Settings doesn't notify apps, so check once a second while the window is open.
             while !Task.isCancelled {
+                let wasGranted = granted
                 granted = Dictionary(uniqueKeysWithValues: Permission.allCases.map { ($0, $0.isGranted) })
+                // Put the drag panel away once the permission it was helping with comes through.
+                if granted.contains(where: { $0.value && wasGranted[$0.key] == false }) {
+                    flow.closePanel()
+                }
                 try? await Task.sleep(for: .seconds(1))
             }
         }

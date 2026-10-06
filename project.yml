@@ -13,6 +13,9 @@ packages:
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
     from: 2.6.0
+  PermissionFlow:
+    url: https://github.com/jaywcjlove/PermissionFlow
+    from: 1.0.0
 targets:
   Snapback:
     type: application
@@ -23,6 +26,7 @@ targets:
     dependencies:
       - package: KeyboardShortcuts
       - package: Sparkle
+      - package: PermissionFlow
     info:
       path: Info.plist
       properties:
