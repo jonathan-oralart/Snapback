@@ -5,4 +5,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AppWindows.watchForLastWindowClosing()
         PermissionsWindow.showIfNeeded()
     }
+
+    /// Opening Snapback again while it's running (Finder, Spotlight) shows Settings, since the menu bar
+    /// icon can be hidden by the notch or a menu bar manager and opening would otherwise seem to do nothing.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+        if !hasVisibleWindows {
+            AppWindows.show(id: "Settings") {
+                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            }
+        }
+        return true
+    }
 }
