@@ -23,6 +23,12 @@ xcodebuild archive -project Snapback.xcodeproj -scheme Snapback -configuration R
 xcodebuild -exportArchive -archivePath "$OUT/Snapback.xcarchive" -exportOptionsPlist scripts/ExportOptions.plist \
   -exportPath "$OUT" -allowProvisioningUpdates -quiet
 
+echo "› Notarizing the app (a few minutes)"
+# Stapled to the app itself, so it opens offline and Sparkle updates (which unpack the app) carry the ticket.
+ditto -c -k --keepParent "$OUT/Snapback.app" "$OUT/Snapback.zip"
+xcrun notarytool submit "$OUT/Snapback.zip" --keychain-profile "$NOTARY_PROFILE" --wait
+xcrun stapler staple "$OUT/Snapback.app"
+
 echo "› Making the disk image"
 STAGE=$OUT/dmg
 mkdir -p "$STAGE" && cp -R "$OUT/Snapback.app" "$STAGE/" && ln -s /Applications "$STAGE/Applications"
@@ -31,7 +37,7 @@ hdiutil create -quiet -volname Snapback -srcfolder "$STAGE" -ov -format UDZO "$D
 IDENTITY=$(security find-identity -v -p codesigning | grep -o 'Developer ID Application: [^"]*' | head -1 || true)
 [[ -n "$IDENTITY" ]] && codesign --sign "$IDENTITY" --timestamp "$DMG"
 
-echo "› Notarizing (a few minutes)"
+echo "› Notarizing the disk image"
 xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait
 xcrun stapler staple "$DMG"
 

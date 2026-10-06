@@ -28,7 +28,7 @@ enum AppWindows {
     static func watchForLastWindowClosing() {
         NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: nil, queue: .main) { note in
             // Delivered on the main queue, so the window can be used on the main actor.
-            nonisolated(unsafe) let closing = note.object as? NSWindow
+            let closing = note.object as? NSWindow
             MainActor.assumeIsolated {
                 guard let closing, closing.styleMask.contains(.titled) else { return }
                 DispatchQueue.main.async {
