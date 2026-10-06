@@ -42,6 +42,12 @@ xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait
 xcrun stapler staple "$DMG"
 
 echo "› Writing the update feed"
+# Release notes: user-facing commit subjects (feat/fix/perf) since the previous release, without the prefix.
+PREVIOUS=$(git describe --tags --abbrev=0 2>/dev/null || true)
+NOTES=$(git log --format=%s ${PREVIOUS:+$PREVIOUS..}HEAD | grep -E '^(feat|fix|perf)(\(.*\))?: ' \
+  | sed -E 's/^[a-z]+(\(.*\))?: //' | perl -CS -pe 's/^(.)/\u$1/' || true)
+[[ -n "$NOTES" ]] || NOTES="Small improvements and fixes."
+NOTES_HTML=$(print -r -- "$NOTES" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's|^|<li>|' -e 's|$|</li>|')
 SIGNATURE=$("$DERIVED/SourcePackages/artifacts/sparkle/Sparkle/bin/sign_update" "$DMG")
 cat > "$OUT/appcast.xml" <<XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -54,7 +60,10 @@ cat > "$OUT/appcast.xml" <<XML
       <sparkle:version>$BUILD</sparkle:version>
       <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.4</sparkle:minimumSystemVersion>
-      <sparkle:releaseNotesLink>https://github.com/$REPO/releases/tag/v$VERSION</sparkle:releaseNotesLink>
+      <description><![CDATA[
+        <style>:root { color-scheme: light dark; } body { font: 13px -apple-system, sans-serif; margin: 4px 8px; } li { margin: 4px 0; }</style>
+        <ul>$NOTES_HTML</ul>
+      ]]></description>
       <enclosure url="https://github.com/$REPO/releases/download/v$VERSION/Snapback-$VERSION.dmg" $SIGNATURE type="application/octet-stream"/>
     </item>
   </channel>
@@ -63,7 +72,7 @@ XML
 
 echo "› Publishing v$VERSION"
 git tag "v$VERSION" && git push origin "v$VERSION"
-gh release create "v$VERSION" "$DMG" "$OUT/appcast.xml" --repo "$REPO" --title "Snapback $VERSION" --generate-notes
+gh release create "v$VERSION" "$DMG" "$OUT/appcast.xml" --repo "$REPO" --title "Snapback $VERSION" --notes "$(print -r -- "$NOTES" | sed 's/^/- /')"
 # Remove the loose app copies so macOS never opens one of these instead of the installed app.
 rm -rf "$OUT/Snapback.app" "$STAGE"
 echo "Done: https://github.com/$REPO/releases/tag/v$VERSION"
