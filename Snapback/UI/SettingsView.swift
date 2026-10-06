@@ -36,7 +36,7 @@ struct SettingsView: View {
             } header: {
                 Text("While annotating")
             } footer: {
-                Text("Clicking outside the screenshot also closes and saves. Hold ⌘ while annotating to see shortcuts on the toolbar.")
+                Text("Clicking outside the screenshot also closes and saves.")
             }
         }
         .formStyle(.grouped)

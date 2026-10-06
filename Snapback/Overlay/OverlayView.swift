@@ -15,8 +15,6 @@ struct OverlayView: View {
     @State private var hoveredCorner: Marker.Corner?
     @State private var drag: DragMode?
     @State private var isBackdropShown: Bool
-    /// Holding ⌘ shows each toolbar button's shortcut.
-    @State private var showsShortcuts = false
     @State private var popupSize = CGSize(width: NoteBubble.width, height: 44)
     @State private var toolbarSize = CGSize(width: 300, height: 52)
     /// The selected marker's popup is always shown; `.note` means its note is being typed into.
@@ -71,7 +69,7 @@ struct OverlayView: View {
             }
 
             OverlayToolbar(hasMarkers: !session.markers.isEmpty, style: $session.style, history: historyPosition,
-                           showsShortcuts: showsShortcuts, onNavigate: onNavigate, onSend: onSend)
+                           onNavigate: onNavigate, onSend: onSend)
                 .onGeometryChange(for: CGSize.self, of: \.size) { toolbarSize = $0 }
                 .offset(toolbarOffset)
         }
@@ -84,14 +82,12 @@ struct OverlayView: View {
                 Button("", action: { undo(redo: false) }).keyboardShortcut("z")
                 Button("", action: { undo(redo: true) }).keyboardShortcut("z", modifiers: [.command, .shift])
                 Button("", action: discardKey).globalKeyboardShortcut(.discard)
+                Button("", action: { if !session.markers.isEmpty { onSend() } }).globalKeyboardShortcut(.send)
                 Button("", action: { if historyPosition.hasOlder { onNavigate(1) } }).keyboardShortcut("[")
                 Button("", action: { if historyPosition.hasNewer { onNavigate(-1) } }).keyboardShortcut("]")
             }
             .opacity(0)
             .accessibilityHidden(true)
-        }
-        .onModifierKeysChanged(mask: .command) { _, keys in
-            withAnimation(.easeOut(duration: 0.12)) { showsShortcuts = keys.contains(.command) }
         }
         .focusable()
         .focusEffectDisabled()

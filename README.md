@@ -27,7 +27,7 @@ Requires macOS 26.4 and the [Claude desktop app](https://claude.ai/download). On
 | Close and save | Esc, or click outside the screenshot |
 | Close without saving | ⌘⌫ |
 
-Hold ⌘ while annotating to see shortcuts on the toolbar. The last 20 captures are kept under **Recent** in the menu bar icon.
+The last 20 captures are kept under **Recent** in the menu bar icon.
 
 ## Build
 

@@ -1,4 +1,3 @@
-import KeyboardShortcuts
 import SwiftUI
 
 /// A capture's place in Recent, newest first. `index` is nil for a capture that hasn't been saved yet.
@@ -15,27 +14,23 @@ struct OverlayToolbar: View {
     let hasMarkers: Bool
     @Binding var style: MarkerStyle
     let history: HistoryPosition
-    let showsShortcuts: Bool
     let onNavigate: (Int) -> Void
     let onSend: () -> Void
 
     var body: some View {
         HStack(spacing: 10) {
             if history.count > 0 {
-                HistoryControls(position: history, showsShortcuts: showsShortcuts, onNavigate: onNavigate)
+                HistoryControls(position: history, onNavigate: onNavigate)
                 Divider().frame(height: 22)
             }
-            StyleControls(style: $style, showsShortcuts: showsShortcuts)
+            StyleControls(style: $style)
             Divider().frame(height: 22)
             Button(action: onSend) {
-                HStack(spacing: 6) {
-                    Label("Claude", systemImage: "paperplane.fill")
-                    if showsShortcuts { KeyCap(for: .send) }
-                }
+                Label("Claude", systemImage: "paperplane.fill")
             }
-            .globalKeyboardShortcut(.send)
             .buttonStyle(SendButtonStyle())
             .disabled(!hasMarkers)
+            // Its shortcut lives on the overlay, which stays put while the toolbar redraws.
             .help("Send to a new Claude Code chat")
         }
         .padding(8)
@@ -43,33 +38,9 @@ struct OverlayToolbar: View {
     }
 }
 
-/// A shortcut drawn as a small keycap, shown while ⌘ is held.
-private struct KeyCap: View {
-    let keys: String
-
-    init(_ keys: String) {
-        self.keys = keys
-    }
-
-    init(for name: KeyboardShortcuts.Name) {
-        keys = KeyboardShortcuts.getShortcut(for: name)?.description ?? ""
-    }
-
-    var body: some View {
-        Text(keys)
-            .font(.system(size: 10, weight: .medium))
-            .opacity(0.7)
-            .padding(.horizontal, 4)
-            .padding(.vertical, 1)
-            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(.foreground.opacity(0.35), lineWidth: 1))
-            .transition(.opacity)
-    }
-}
-
 /// Older and newer arrows around this capture's place in Recent.
 private struct HistoryControls: View {
     let position: HistoryPosition
-    let showsShortcuts: Bool
     let onNavigate: (Int) -> Void
 
     var body: some View {
@@ -80,7 +51,6 @@ private struct HistoryControls: View {
                 .foregroundStyle(.secondary)
                 .frame(minWidth: 44)
             arrow("chevron.right", step: -1, enabled: position.hasNewer, help: "Newer capture")
-            if showsShortcuts { KeyCap("← →").padding(.leading, 4) }
         }
     }
 
@@ -102,7 +72,6 @@ private struct HistoryControls: View {
 /// A dot showing the current marker colour and size; clicking it opens the swatches and size dots beside it.
 private struct StyleControls: View {
     @Binding var style: MarkerStyle
-    let showsShortcuts: Bool
     @State private var isExpanded = false
 
     var body: some View {
@@ -119,7 +88,6 @@ private struct StyleControls: View {
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.secondary)
                         .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                    if showsShortcuts { KeyCap("− +") }
                 }
                 .padding(.horizontal, 8)
                 .frame(height: 30)
