@@ -3,6 +3,7 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppWindows.watchForLastWindowClosing()
+        MoveToApplications.offerIfNeeded()
         PermissionsWindow.showIfNeeded()
     }
 
