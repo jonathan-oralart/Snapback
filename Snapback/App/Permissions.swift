@@ -32,10 +32,7 @@ enum Permission: CaseIterable, Identifiable {
 
     static var allGranted: Bool { allCases.allSatisfy(\.isGranted) }
 
-    func request() {
-        let pane: String
-        switch self {
-         /// Asks macOS for the permission, landing in the right System Settings list.
+    /// Asks macOS for the permission, landing in the right System Settings list.
     func request() {
         switch self {
         case .screenRecording:
@@ -59,7 +56,12 @@ enum Permission: CaseIterable, Identifiable {
     private func openSettings(_ pane: String) {
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?\(pane)")!)
     }
- static func showIfNeeded() {
+}
+
+enum PermissionsWindow {
+    private static var window: NSWindow?
+
+    static func showIfNeeded() {
         guard !Permission.allGranted else { return }
         if window == nil {
             let window = NSWindow(contentViewController: NSHostingController(rootView: PermissionsView()))
