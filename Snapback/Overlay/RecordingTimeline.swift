@@ -57,6 +57,14 @@ struct RecordingTimeline: View {
                 .background(Color.primary.opacity(0.08))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
+                // The frame on screen. On a kept frame it starts below that frame's number rather than across it.
+                let playheadTop: CGFloat = session.frameIndex == nil ? -3 : 2 + 20 * 1.2
+                Capsule()
+                    .fill(.white)
+                    .frame(width: 3, height: Self.stripHeight + 3 - playheadTop)
+                    .shadow(color: .black.opacity(0.5), radius: 2)
+                    .offset(x: position(of: recording.seconds(recording.times[session.position]), in: width) - 1.5, y: playheadTop)
+
                 // Kept frames: a line in the marker colour with the frame's number. The one under the pointer,
                 // or on screen, stands out.
                 ForEach(Array(session.frames.enumerated()), id: \.offset) { index, _ in
@@ -78,13 +86,6 @@ struct RecordingTimeline: View {
                 }
                 .animation(.snappy(duration: 0.15), value: hoveredFrame)
                 .animation(.snappy(duration: 0.15), value: session.frameIndex)
-
-                // The frame on screen.
-                Capsule()
-                    .fill(.white)
-                    .frame(width: 3, height: Self.stripHeight + 6)
-                    .shadow(color: .black.opacity(0.5), radius: 2)
-                    .offset(x: position(of: recording.seconds(recording.times[session.position]), in: width) - 1.5, y: -3)
             }
             .contentShape(Rectangle())
             .gesture(
