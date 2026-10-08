@@ -34,8 +34,9 @@ enum FeedbackImage {
         }
     }
 
-    /// Like a macOS window screenshot: each frame floats on transparent padding with a soft shadow.
-    /// The notes sit in a white card underneath, so they stay readable on any background. With no markers there's no card.
+    /// Like a macOS window screenshot: each frame floats on light grey padding with a soft shadow.
+    /// The padding is solid, not transparent, so frame labels stay readable in dark chat themes.
+    /// The notes sit in a white card underneath. With no markers there's no card.
     static func png(for session: AnnotationSession) -> Data {
         let frames = session.framesToSend
         let style = session.style
@@ -109,6 +110,8 @@ enum FeedbackImage {
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         ) else { return Data() }
         cg.interpolationQuality = CGInterpolationQuality.high
+        cg.setFillColor(NSColor(white: 0.94, alpha: 1).cgColor)
+        cg.fill(CGRect(x: 0, y: 0, width: pixelWidth, height: pixelHeight))
 
         /// Where each frame goes, top-left origin.
         let tiles = frames.indices.map { index in
