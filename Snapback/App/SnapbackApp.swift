@@ -15,8 +15,10 @@ struct SnapbackApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("Snapback", systemImage: "camera.viewfinder") {
+        MenuBarExtra {
             MenuContent(updater: updater.updater)
+        } label: {
+            Image(nsImage: menuBarIcon)
         }
         Settings {
             SettingsView()
