@@ -61,10 +61,12 @@ One-time setup:
    ```
 3. The Sparkle signing key lives in the login keychain. Back it up with `generate_keys -x <file>` (from Sparkle's `bin` folder); without it, existing installs can't verify updates.
 
-Then commit and run:
+Then commit and push with:
 
 ```sh
-scripts/release.sh 1.0.0
+scripts/push.sh
 ```
 
-This builds, signs, notarizes, writes the Sparkle `appcast.xml` and publishes both to a GitHub Release. Installed copies pick it up from `releases/latest/download/appcast.xml`.
+It pushes `main`, and if there are `feat:`, `fix:` or `perf:` commits since the last release it releases them as the next patch version. For a bigger version jump, run `scripts/release.sh 1.1.0` yourself.
+
+Releasing builds, signs, notarizes, writes the Sparkle `appcast.xml` and publishes both to a GitHub Release. Installed copies pick it up from `releases/latest/download/appcast.xml`.
