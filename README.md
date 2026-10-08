@@ -2,6 +2,8 @@
 
 Point at what's wrong, say why, send it to Claude.
 
+![Two annotations sent to Claude as one image, with no extra prompt, fix the title and album artwork](docs/demo.gif)
+
 Snapback is a macOS menu bar app for giving visual feedback to Claude Code. Press a shortcut and it captures the front window; click to drop numbered pins or drag to draw boxes, and write a note for each. Sending it opens a new Claude Code chat and pastes one image: the screenshot with its markers, and the numbered notes underneath.
 
 ## Install
