@@ -64,7 +64,7 @@ struct OverlayView: View {
                 Color.black.opacity(0.3)
             }
             .opacity(isBackdropShown ? 1 : 0)
-            .onAppear { withAnimation(.easeOut(duration: 0.25)) { isBackdropShown = true } }
+            .onAppear { withAnimation(.easeOut(duration: 0.15)) { isBackdropShown = true } }
             .contentShape(Rectangle())
             .onTapGesture(perform: finish)
 

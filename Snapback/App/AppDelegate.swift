@@ -5,6 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AppWindows.watchForLastWindowClosing()
         MoveToApplications.offerIfNeeded()
         PermissionsWindow.showIfNeeded()
+        CaptureCoordinator.shared.warmUp()
         #if DEBUG
         DemoTake.listen()
         #endif

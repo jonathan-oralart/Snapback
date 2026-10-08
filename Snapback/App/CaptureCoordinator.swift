@@ -1,4 +1,5 @@
 import AppKit
+import ScreenCaptureKit
 
 /// Runs one capture: grab the front window, annotate it in place, then save or send it.
 final class CaptureCoordinator {
@@ -14,6 +15,24 @@ final class CaptureCoordinator {
     #endif
     /// A capture from history is being opened; recordings take a moment, and steps shouldn't overtake each other.
     private var isNavigating = false
+
+    /// Does the slow first-time work of a capture at launch, so the first shortcut press opens as fast as later ones:
+    /// ScreenCaptureKit's first window list, and laying out an overlay offscreen.
+    func warmUp() {
+        // Asking for the window list without permission would prompt for it.
+        guard Permission.screenRecording.isGranted else { return }
+        Task { _ = try? await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true) }
+        let context = CGContext(data: nil, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 0,
+                                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        guard let image = context?.makeImage(), let screen = NSScreen.main else { return }
+        let capture = CapturedWindow(image: image, frame: CGRect(x: 0, y: 0, width: 1, height: 1), screen: screen,
+                                     appName: "", windowTitle: nil)
+        let view = OverlayView(session: AnnotationSession(capture: capture), animatesIn: false,
+                               onSend: {}, onCopy: {}, onSave: {}, onDiscard: {}, onNavigate: { _ in })
+        // Never ordered in, so it's never seen.
+        _ = OverlayPanel(screen: screen, content: view)
+        SendSound.current.preload()
+    }
 
     func start() {
         guard panel == nil, !ScreenRecorder.shared.isRecording else { return }
@@ -110,8 +129,6 @@ final class CaptureCoordinator {
             onDiscard: { [weak self] in self?.dismiss() },
             onNavigate: { [weak self] step in self?.navigate(from: session, by: step) }
         )
-        CaptureStore.shared.prefetchNeighbours(of: session.savedID)
-        SendSound.current.preload()
         if let panel {
             panel.show(view)
         } else {
@@ -119,6 +136,9 @@ final class CaptureCoordinator {
             self.panel = panel
             panel.makeKeyAndOrderFront(nil)
         }
+        // Once the overlay is up, so neither delays it.
+        CaptureStore.shared.prefetchNeighbours(of: session.savedID)
+        SendSound.current.preload()
     }
 
     /// Steps through Recent while annotating: +1 is older, −1 newer. The capture being left is saved first,
