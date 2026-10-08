@@ -35,7 +35,8 @@ enum FeedbackImage {
     }
 
     /// Like a macOS window screenshot: each frame floats on transparent padding with a soft shadow.
-    /// Frame labels and notes sit on white, so they stay readable on any background. With no markers there's no card.
+    /// Frame labels sit on pills matching the Mac's light or dark mode, and notes on white, so they stay readable on any background.
+    /// With no markers there's no card.
     static func png(for session: AnnotationSession) -> Data {
         let frames = session.framesToSend
         let style = session.style
@@ -65,11 +66,12 @@ enum FeedbackImage {
         } ?? 1
         let rows = (frames.count + columns - 1) / columns
 
+        let dark = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
         let labels: [NSAttributedString] = frames.count <= 1 ? [] : frames.enumerated().map { index, frame in
             let seconds = frame.time.map { session.recording?.seconds($0) ?? 0 } ?? 0
             return NSAttributedString(string: "Frame \(index + 1) · \(String(format: "%.2f", seconds))s", attributes: [
                 .font: NSFont.systemFont(ofSize: 14 * scale, weight: .semibold),
-                .foregroundColor: NSColor(white: 0.15, alpha: 1),
+                .foregroundColor: NSColor(white: dark ? 0.92 : 0.15, alpha: 1),
             ])
         }
         let labelInset = CGSize(width: 8 * scale, height: 3 * scale)
@@ -153,7 +155,7 @@ enum FeedbackImage {
             cg.saveGState()
             cg.setShadow(offset: CGSize(width: 0, height: -2 * scale), blur: 8 * scale, color: NSColor.black.withAlphaComponent(0.25).cgColor)
             cg.addPath(CGPath(roundedRect: pill, cornerWidth: pillHeight / 2, cornerHeight: pillHeight / 2, transform: nil))
-            cg.setFillColor(NSColor.white.cgColor)
+            cg.setFillColor(NSColor(white: dark ? 0.18 : 1, alpha: 1).cgColor)
             cg.fillPath()
             cg.restoreGState()
             label.draw(with: pill.insetBy(dx: labelInset.width, dy: labelInset.height), options: drawingOptions)
