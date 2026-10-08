@@ -79,6 +79,9 @@ private struct PermissionsView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(permission.title).font(.headline)
                         Text(permission.purpose).font(.callout).foregroundStyle(.secondary)
+                            // Always wrap. Otherwise the text can also fit on one truncated line, which gives the
+                            // window two possible heights, and resizing between them crashed on macOS 26.5.
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer()
                     if granted[permission] != true {
