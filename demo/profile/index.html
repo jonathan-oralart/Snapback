@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circle · Profile</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    color: #2a1f1d;
+    background: #fbe6dc;
+  }
+
+  .card {
+    position: relative;
+    width: 340px;
+    background: white;
+    border-radius: 28px;
+    box-shadow: 0 30px 60px -25px rgba(160, 80, 50, 0.45);
+    overflow: hidden;
+  }
+
+  .banner {
+    height: 110px;
+    background: linear-gradient(120deg, #ff9a62, #ff5e7e);
+  }
+
+  .avatar {
+    position: absolute;
+    top: -48px;
+    left: 50%;
+    width: 96px;
+    height: 96px;
+    margin-left: -48px;
+    display: grid;
+    place-items: center;
+    font-size: 40px;
+    font-weight: 700;
+    color: white;
+    background: #6c4cf1;
+    border: 5px solid white;
+    border-radius: 50%;
+  }
+
+  .body {
+    padding: 60px 24px 28px;
+    text-align: center;
+  }
+
+  .name {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  .handle {
+    margin: 4px 0 20px;
+    color: #8a7b77;
+  }
+
+  .stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 24px;
+  }
+
+  .stats b {
+    display: block;
+    font-size: 20px;
+  }
+
+  .stats span {
+    color: #8a7b77;
+    font-size: 13px;
+  }
+
+  .follow {
+    display: block;
+    width: 100%;
+    margin-left: 40px;
+    padding: 15px;
+    font: inherit;
+    font-weight: 700;
+    color: white;
+    background: #ff5e7e;
+    border: 0;
+    border-radius: 14px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="banner"></div>
+    <div class="avatar">M</div>
+
+    <div class="body">
+      <p class="name">
+        Maya Okafor
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#2f8cff" /><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </p>
+      <p class="handle">@mayamakes</p>
+
+      <div class="stats">
+        <div><b>248</b><span>Posts</span></div>
+        <div><b>12.4k</b><span>Followers</span></div>
+        <div><b>310</b><span>Following</span></div>
+      </div>
+
+      <button class="follow">Follow</button>
+    </div>
+  </div>
+</body>
+</html>

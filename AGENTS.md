@@ -14,6 +14,10 @@ The Xcode project is generated from `project.yml` with XcodeGen; edit that and r
 
 `scripts/release.sh <version>` archives, signs with Developer ID (Xcode's cloud-managed certificate), notarizes, makes the DMG, writes Sparkle's `appcast.xml` and publishes both to a GitHub Release. Commit first; the build number is the commit count. Release notes are the `feat:`, `fix:` and `perf:` commit subjects since the last release, so write those for users. Setup and details are in README.md.
 
+## Demo
+
+`demo/<name>` are small pages for the README GIF. `scripts/record-demo.sh <name>` records a take: Snapback Dev replays `demo/takes/<name>.json` (`DemoTake`, Debug builds only) with real pointer and key events, sends it to a Claude Code session in the demo's folder and submits it; the page reloads when its file changes. Usage is at the top of the script.
+
 ## App icon
 
 `Snapback/AppIcon.icon` is an Icon Composer icon: the background colour is the `fill` in its `icon.json`, and the artwork layers are drawn by `Icon/render-icon.swift` (run command at the top of that file). Edit the script and re-run it rather than editing the PNGs. The Debug build uses `Snapback/AppIconDev.icon`, the same artwork on orange; the script writes both.

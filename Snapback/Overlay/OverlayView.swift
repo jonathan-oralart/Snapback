@@ -77,6 +77,11 @@ struct OverlayView: View {
         }
         .frame(width: screenSize.width, height: screenSize.height, alignment: .topLeading)
         .ignoresSafeArea()
+        #if DEBUG
+        .onChange(of: imageRect, initial: true) {
+            DemoTake.shown = .init(rect: imageRect, zoom: zoom, screen: session.capture.screen.frame)
+        }
+        #endif
         .background {
             // Invisible buttons for keys whose meaning depends on whether a note is being typed in.
             Group {

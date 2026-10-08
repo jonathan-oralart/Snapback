@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skyline · Weather</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    color: white;
+    background: #dbe9f7;
+  }
+
+  .weather {
+    position: relative;
+    width: 340px;
+    padding: 28px 24px 24px;
+    background: linear-gradient(170deg, #4aa3ff, #1d62d6);
+    border-radius: 28px;
+    box-shadow: 0 30px 60px -25px rgba(29, 98, 214, 0.6);
+    overflow: hidden;
+  }
+
+  .sun {
+    position: absolute;
+    top: -46px;
+    right: -46px;
+    width: 130px;
+    height: 130px;
+  }
+
+  .city {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .temp {
+    margin: -30px 0 0;
+    font-size: 96px;
+    font-weight: 200;
+    letter-spacing: -0.04em;
+  }
+
+  .condition {
+    margin: 0 0 24px;
+    font-size: 17px;
+    font-weight: 500;
+    opacity: 0.85;
+  }
+
+  .forecast {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .day {
+    width: 64px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .day div {
+    margin: 6px 0;
+    font-size: 24px;
+  }
+</style>
+</head>
+<body>
+  <div class="weather">
+    <svg class="sun" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="24" fill="#ffd84a" />
+      <g stroke="#ffd84a" stroke-width="6" stroke-linecap="round">
+        <line x1="50" y1="6" x2="50" y2="16" />
+        <line x1="50" y1="84" x2="50" y2="94" />
+        <line x1="6" y1="50" x2="16" y2="50" />
+        <line x1="84" y1="50" x2="94" y2="50" />
+        <line x1="19" y1="19" x2="26" y2="26" />
+        <line x1="74" y1="74" x2="81" y2="81" />
+        <line x1="19" y1="81" x2="26" y2="74" />
+        <line x1="74" y1="26" x2="81" y2="19" />
+      </g>
+    </svg>
+
+    <p class="city">Lisbon</p>
+    <p class="temp">24°</p>
+    <p class="condition">Sunny, light breeze</p>
+
+    <div class="forecast">
+      <div class="day">Mon<div>☀️</div>25°</div>
+      <div class="day">Tue<div>🌤️</div>23°</div>
+      <div class="day">Wed<div>⛅️</div>21°</div>
+      <div class="day">Thu<div>🌧️</div>18°</div>
+      <div class="day">Fri<div>☀️</div>22°</div>
+    </div>
+  </div>
+</body>
+</html>

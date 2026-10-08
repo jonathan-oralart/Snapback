@@ -13,7 +13,14 @@ enum ClaudeCodeSender {
         // Bring Claude to the front with the new session, rather than leaving the previous app focused.
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = true
-        _ = try? await NSWorkspace.shared.open(URL(string: "claude://code/new")!, configuration: configuration)
+        var url = URL(string: "claude://code/new")!
+        #if DEBUG
+        // A demo take opens the session in the demo's folder, as Finder's "New Claude Code Session Here" does.
+        if let folder = DemoTake.folder {
+            url.append(queryItems: [URLQueryItem(name: "folder", value: folder.path)])
+        }
+        #endif
+        _ = try? await NSWorkspace.shared.open(url, configuration: configuration)
 
         guard await waitForClaudeInFront() else {
             notify("Claude didn't come to the front. The screenshot is on the clipboard — paste it with ⌘V.")

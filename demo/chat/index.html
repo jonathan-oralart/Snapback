@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Natter · Chat</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    color: #1c2421;
+    background: #d9f0e6;
+  }
+
+  .chat {
+    display: flex;
+    flex-direction: column;
+    width: 340px;
+    background: white;
+    border-radius: 28px;
+    box-shadow: 0 30px 60px -25px rgba(20, 110, 80, 0.45);
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px;
+    border-bottom: 1px solid #e6ece9;
+  }
+
+  .dot {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    color: white;
+    background: #17a679;
+    border-radius: 50%;
+  }
+
+  header b { font-size: 17px; }
+
+  .messages {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 20px;
+  }
+
+  .msg {
+    padding: 10px 14px;
+    font-size: 15px;
+    line-height: 1.35;
+    background: #eef2f0;
+    border-radius: 18px;
+  }
+
+  .msg.me {
+    color: white;
+    background: #17a679;
+  }
+
+  .composer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px 18px;
+    border-top: 1px solid #e6ece9;
+  }
+
+  .composer input {
+    flex: 1;
+    padding: 12px 16px;
+    font: inherit;
+    background: #f3f6f5;
+    border: 0;
+    border-radius: 999px;
+  }
+
+  .send {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    background: #17a679;
+    border: 0;
+    border-radius: 50%;
+  }
+
+  .send svg { transform: rotate(180deg); }
+</style>
+</head>
+<body>
+  <div class="chat">
+    <header>
+      <div class="dot">A</div>
+      <b>Alex</b>
+    </header>
+
+    <div class="messages">
+      <div class="msg">Did you find a place for Saturday?</div>
+      <div class="msg me">Yes! This one looks great</div>
+      <div class="msg me">https://maps.example.com/TheLittleGreenhouseCafe</div>
+      <div class="msg">Perfect, see you at 11</div>
+    </div>
+
+    <div class="composer">
+      <input placeholder="Message">
+      <button class="send" aria-label="Send">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+      </button>
+    </div>
+  </div>
+  <script>
+    // Reloads when this file changes, so an edit shows up without touching the browser.
+    let last;
+    setInterval(async () => {
+      const text = await fetch(location.href, { cache: "no-store" }).then(r => r.text()).catch(() => last);
+      if (last && text !== last) location.reload();
+      last = text;
+    }, 500);
+  </script>
+</body>
+</html>

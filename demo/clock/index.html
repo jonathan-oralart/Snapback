@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tempo · Clock</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    color: #f5f1e8;
+    background: #e9e4da;
+  }
+
+  .widget {
+    width: 320px;
+    padding: 28px;
+    text-align: center;
+    background: #1f2b3a;
+    border-radius: 32px;
+    box-shadow: 0 30px 60px -25px rgba(31, 43, 58, 0.7);
+  }
+
+  .face {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .face text {
+    fill: #f5f1e8;
+    font-size: 17px;
+    font-weight: 600;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+
+  .hand {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .city {
+    margin: 18px 0 2px;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .time {
+    margin: 0;
+    color: #9fb0c4;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+  <div class="widget">
+    <svg class="face" viewBox="-120 -120 240 240">
+      <circle r="114" fill="#2b3a4d" />
+      <g id="numbers"></g>
+      <rect class="hand" id="hour" x="-4" y="-56" width="8" height="56" rx="4" fill="#f5f1e8" />
+      <rect class="hand" id="minute" x="-3" y="-86" width="6" height="86" rx="3" fill="#f5f1e8" />
+      <circle r="7" fill="#ff8a3d" />
+    </svg>
+
+    <p class="city">Lisbon</p>
+    <p class="time">10:10 AM</p>
+  </div>
+
+  <script>
+    const numbers = document.getElementById("numbers");
+    for (let i = 1; i <= 12; i++) {
+      const angle = (i % 12) * 30 * Math.PI / 180;
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", Math.cos(angle) * 90);
+      text.setAttribute("y", Math.sin(angle) * 90);
+      text.textContent = i;
+      numbers.append(text);
+    }
+
+    const hours = 10, minutes = 10;
+    document.getElementById("hour").style.transform = `rotate(${(hours % 12) * 30 + minutes / 2}deg)`;
+    document.getElementById("minute").style.transform = `rotate(${minutes * 6}deg)`;
+  </script>
+</body>
+</html>

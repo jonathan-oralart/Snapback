@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wavelength · Now playing</title>
+<style>
+  :root {
+    --ink: #f4efff;
+    --muted: #a59cc0;
+    --card: #221a36;
+    --accent: #ff7a59;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    color: var(--ink);
+    background: radial-gradient(circle at 30% 20%, #3b2a63, #120d1f 70%);
+  }
+
+  .player {
+    width: 380px;
+    padding: 24px;
+    background: var(--card);
+    border-radius: 28px;
+    box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.7);
+  }
+
+  .art {
+    display: block;
+    width: 100%;
+    height: 200px;
+    border-radius: 18px;
+  }
+
+  .title {
+    margin: 22px 0 4px;
+    font-size: 22px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .artist {
+    margin: 0;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .bar {
+    position: relative;
+    height: 6px;
+    margin: 24px 0 8px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+  }
+
+  .bar div {
+    width: 28%;
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+  }
+
+  .times {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 36px;
+    margin-top: 18px;
+  }
+
+  .controls button {
+    display: grid;
+    place-items: center;
+    padding: 0;
+    color: var(--ink);
+    background: none;
+    border: 0;
+  }
+
+  .controls .play {
+    width: 68px;
+    height: 68px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+</style>
+</head>
+<body>
+  <div class="player">
+    <svg class="art" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffb36b" />
+          <stop offset="1" stop-color="#ff5f8a" />
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" fill="url(#sky)" />
+      <circle cx="50" cy="56" r="26" fill="#fff1c9" />
+      <rect y="62" width="100" height="38" fill="#3b2a63" />
+      <rect y="70" width="100" height="3" fill="#ff7a59" opacity="0.6" />
+      <rect y="80" width="100" height="3" fill="#ff7a59" opacity="0.4" />
+      <rect y="90" width="100" height="3" fill="#ff7a59" opacity="0.2" />
+    </svg>
+
+    <p class="title">Everything Moves in Slow Motion (Extended Mix)</p>
+    <p class="artist">Night Static</p>
+
+    <div class="bar"><div></div></div>
+    <div class="times">
+      <span>1:4</span>
+      <span>3:52</span>
+    </div>
+
+    <div class="controls">
+      <button aria-label="Previous">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z" /></svg>
+      </button>
+      <button class="play" aria-label="Play">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="#221a36"><path d="M7 4v16l13-8z" /></svg>
+      </button>
+      <button aria-label="Next">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z" /></svg>
+      </button>
+    </div>
+  </div>
+  <script>
+    // Reloads when this file changes, so an edit shows up without touching the browser.
+    let last;
+    setInterval(async () => {
+      const text = await fetch(location.href, { cache: "no-store" }).then(r => r.text()).catch(() => last);
+      if (last && text !== last) location.reload();
+      last = text;
+    }, 500);
+  </script>
+</body>
+</html>

@@ -5,6 +5,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AppWindows.watchForLastWindowClosing()
         MoveToApplications.offerIfNeeded()
         PermissionsWindow.showIfNeeded()
+        #if DEBUG
+        DemoTake.listen()
+        #endif
     }
 
     /// Opening Snapback again while it's running (Finder, Spotlight) shows Settings, since the menu bar
