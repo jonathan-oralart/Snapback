@@ -34,9 +34,8 @@ enum FeedbackImage {
         }
     }
 
-    /// Like a macOS window screenshot: each frame floats on light grey padding with a soft shadow.
-    /// The padding is solid, not transparent, so frame labels stay readable in dark chat themes.
-    /// The notes sit in a white card underneath. With no markers there's no card.
+    /// Like a macOS window screenshot: each frame floats on transparent padding with a soft shadow.
+    /// Frame labels and notes sit on white, so they stay readable on any background. With no markers there's no card.
     static func png(for session: AnnotationSession) -> Data {
         let frames = session.framesToSend
         let style = session.style
@@ -73,7 +72,9 @@ enum FeedbackImage {
                 .foregroundColor: NSColor(white: 0.15, alpha: 1),
             ])
         }
-        let labelHeight = labels.isEmpty ? 0 : height(of: labels[0], width: tileWidth) + 8 * scale
+        let labelInset = CGSize(width: 8 * scale, height: 3 * scale)
+        let pillHeight = labels.isEmpty ? 0 : height(of: labels[0], width: tileWidth) + labelInset.height * 2
+        let labelHeight = labels.isEmpty ? 0 : pillHeight + 8 * scale
         let gridWidth = CGFloat(columns) * tileWidth + CGFloat(columns - 1) * gap
         let gridHeight = CGFloat(rows) * (labelHeight + tileHeight) + CGFloat(rows - 1) * gap
 
@@ -110,8 +111,6 @@ enum FeedbackImage {
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         ) else { return Data() }
         cg.interpolationQuality = CGInterpolationQuality.high
-        cg.setFillColor(NSColor(white: 0.94, alpha: 1).cgColor)
-        cg.fill(CGRect(x: 0, y: 0, width: pixelWidth, height: pixelHeight))
 
         /// Where each frame goes, top-left origin.
         let tiles = frames.indices.map { index in
@@ -146,7 +145,15 @@ enum FeedbackImage {
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = NSGraphicsContext(cgContext: cg, flipped: true)
         for (label, tile) in zip(labels, tiles) {
-            label.draw(with: CGRect(x: tile.minX, y: tile.minY - labelHeight, width: tile.width, height: labelHeight), options: drawingOptions)
+            let textWidth = label.boundingRect(with: CGSize(width: tileWidth, height: .greatestFiniteMagnitude), options: drawingOptions).width.rounded(.up)
+            let pill = CGRect(x: tile.minX, y: tile.minY - labelHeight, width: textWidth + labelInset.width * 2, height: pillHeight)
+            cg.saveGState()
+            cg.setShadow(offset: CGSize(width: 0, height: -2 * scale), blur: 8 * scale, color: NSColor.black.withAlphaComponent(0.25).cgColor)
+            cg.addPath(CGPath(roundedRect: pill, cornerWidth: pillHeight / 2, cornerHeight: pillHeight / 2, transform: nil))
+            cg.setFillColor(NSColor.white.cgColor)
+            cg.fillPath()
+            cg.restoreGState()
+            label.draw(with: pill.insetBy(dx: labelInset.width, dy: labelInset.height), options: drawingOptions)
         }
         NSGraphicsContext.restoreGraphicsState()
 
