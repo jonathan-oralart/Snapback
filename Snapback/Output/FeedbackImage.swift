@@ -4,12 +4,17 @@ import AppKit
 /// notes in a card underneath. Everything travels in the one image, so it works wherever an image can be pasted.
 enum FeedbackImage {
     /// Size of the notes embedded below the screenshot, independent of marker size.
+    /// Only the dev build lets you change it; releases always use standard.
     enum TextSize: String, CaseIterable {
         case standard, large, extraLarge
 
         static let defaultsKey = "annotationTextSize"
         static var current: Self {
+            #if DEBUG
             UserDefaults.standard.string(forKey: defaultsKey).flatMap(Self.init(rawValue:)) ?? .standard
+            #else
+            .standard
+            #endif
         }
 
         var title: String {
