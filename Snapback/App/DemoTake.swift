@@ -1,11 +1,10 @@
 #if DEBUG
 import AppKit
-import KeyboardShortcuts
 
 /// Debug builds only: plays a scripted take for recording the README demo (`scripts/record-demo.sh`).
-/// It first lays out Claude and the demo page side by side; then the take, a capture.json, has its markers added to a
-/// capture of the page with real pointer and key events, as if typed by hand, and it's sent to a new Claude Code
-/// session in the demo's folder and submitted.
+/// It first lays out Claude and the demo page side by side; then the take has its markers added to a
+/// capture of the page through the real annotation session. The operator clicks Send to Claude,
+/// then submits after verifying the attachment.
 enum DemoTake {
     static let notification = Notification.Name("com.oralart.snapback.dev.take")
     private static let claudeBundleID = "com.anthropic.claudefordesktop"
@@ -18,10 +17,10 @@ enum DemoTake {
     }
 
     static var shown: Shown?
-    /// The folder the next Claude Code session opens in, read by `ClaudeCodeSender`.
-    private(set) static var folder: URL?
+    static var sendButton: CGRect?
 
     private struct Take: Decodable {
+        let windowSize: CGSize
         let markers: [Marker]
     }
 
@@ -34,8 +33,6 @@ enum DemoTake {
         var title: String
         /// Without a take, it only lays out the windows.
         var take: URL?
-        var folder: URL
-        var prompt: String
         /// A file each step's time is appended to, for cutting the recording.
         var times: URL
     }
@@ -45,15 +42,20 @@ enum DemoTake {
             guard let info = note.userInfo as? [String: String],
                   let layout = info["layout"]?.split(separator: ",").compactMap({ Double($0) }), layout.count == 4,
                   let browser = info["browser"], let title = info["title"], let take = info["take"],
-                  let folder = info["folder"], let prompt = info["prompt"], let times = info["times"] else { return }
+                  let times = info["times"] else { return }
             let request = Request(layout: CGRect(x: layout[0], y: layout[1], width: layout[2], height: layout[3]),
                                   browser: browser, title: title, take: take.isEmpty ? nil : URL(filePath: take),
-                                  folder: URL(filePath: folder), prompt: prompt, times: URL(filePath: times))
+                                  times: URL(filePath: times))
             Task { @MainActor in await play(request) }
         }
     }
 
+    private static var isPlaying = false
+
     private static func play(_ request: Request) async {
+        guard !isPlaying else { return }
+        isPlaying = true
+        defer { isPlaying = false }
         let times = request.times
         try? Data().write(to: times)
         log("received", to: times)
@@ -67,70 +69,81 @@ enum DemoTake {
             log("failed couldn't read the take", to: times)
             return
         }
-        let folder = request.folder
-        let prompt = request.prompt
-        // Let the windows settle before the capture.
-        try? await Task.sleep(for: .seconds(0.6))
-        log("start", to: times)
-
         shown = nil
-        CaptureCoordinator.shared.start()
-        for _ in 0..<50 where shown == nil {
+        sendButton = nil
+        log("armed", to: times)
+        // The operator activates Snapback with its real shortcut, visible in the recording.
+        for _ in 0..<1200 where shown == nil || CaptureCoordinator.shared.demoSession == nil {
             try? await Task.sleep(for: .milliseconds(100))
         }
-        guard shown != nil else {
+        guard shown != nil, let session = CaptureCoordinator.shared.demoSession else {
             log("failed the overlay didn't open", to: times)
+            return
+        }
+        log("start", to: times)
+        guard abs(session.capture.frame.width - take.windowSize.width) < 1,
+              abs(session.capture.frame.height - take.windowSize.height) < 1 else {
+            log("failed demo window size doesn't match the take", to: times)
             return
         }
         // Let the overlay finish fading in.
         try? await Task.sleep(for: .seconds(0.8))
 
-        for (index, marker) in take.markers.enumerated() {
+        for marker in take.markers {
             switch marker.shape {
             case .pin(let point):
                 await move(to: point)
-                await click(at: point)
             case .box(let rect):
                 await move(to: rect.origin)
-                await drag(from: rect.origin, to: CGPoint(x: rect.maxX, y: rect.maxY))
+                // Animate the same draft the drag gesture draws, without relying on injected mouse events.
+                for step in 1...60 {
+                    let progress = CGFloat(step) / 60
+                    post(.mouseMoved, at: onScreen(CGPoint(x: rect.minX + rect.width * progress,
+                                                           y: rect.minY + rect.height * progress)))
+                    session.draft = CGRect(origin: rect.origin,
+                                           size: CGSize(width: rect.width * progress, height: rect.height * progress))
+                    try? await Task.sleep(for: .milliseconds(16))
+                }
+                session.draft = nil
             }
-            try? await Task.sleep(for: .seconds(0.35))
-            await type(marker.note)
-            try? await Task.sleep(for: .seconds(0.5))
-            // Esc leaves the note; a second Esc clears the selection so the next click adds a marker.
-            press(53)
-            if index < take.markers.count - 1 {
-                try? await Task.sleep(for: .seconds(0.15))
-                press(53)
+            guard session.add(marker.shape) != nil else {
+                log("failed couldn't add a marker", to: times)
+                return
             }
-            try? await Task.sleep(for: .seconds(0.4))
+            try? await Task.sleep(for: .seconds(0.3))
+            for character in marker.note {
+                session.markers[session.markers.count - 1].note.append(character)
+                try? await Task.sleep(for: .milliseconds(65))
+            }
+            try? await Task.sleep(for: .seconds(2.5))
+            session.selectedID = nil
+            try? await Task.sleep(for: .seconds(0.3))
         }
 
-        self.folder = folder
-        defer { self.folder = nil }
-        if let send = KeyboardShortcuts.getShortcut(for: .send) {
-            press(CGKeyCode(send.carbonKeyCode), flags: cgFlags(send.modifiers))
+        if let button = sendButton, let shown {
+            await move(to: CGPoint(x: (button.midX - shown.rect.minX) / shown.zoom,
+                                   y: (button.midY - shown.rect.minY) / shown.zoom))
+        }
+        log("annotated", to: times)
+        // Keep the real toolbar visible until the operator clicks Send to Claude.
+        for _ in 0..<600 where CaptureCoordinator.shared.demoSession != nil {
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+        guard CaptureCoordinator.shared.demoSession == nil, CaptureCoordinator.shared.demoIsSending else {
+            log("failed the annotation wasn't sent to Claude", to: times)
+            return
         }
         log("sent", to: times)
 
-        // Wait for the paste: Claude in front, its composer up, the image attached.
-        for _ in 0..<50 where !isClaudeInFront {
-            try? await Task.sleep(for: .milliseconds(200))
+        // Wait for the normal send pipeline; the operator verifies the attachment before submitting.
+        for _ in 0..<100 where CaptureCoordinator.shared.demoIsSending {
+            try? await Task.sleep(for: .milliseconds(100))
         }
-        try? await Task.sleep(for: .seconds(2.5))
-        // Never type the prompt into whichever other app is in front.
-        guard isClaudeInFront else {
-            log("failed Claude didn't come to the front", to: times)
+        guard !CaptureCoordinator.shared.demoIsSending else {
+            log("failed sending to Claude timed out", to: times)
             return
         }
-        await type(prompt)
-        try? await Task.sleep(for: .seconds(0.4))
-        press(36)
-        log("submitted", to: times)
-    }
-
-    private static var isClaudeInFront: Bool {
-        NSWorkspace.shared.frontmostApplication?.bundleIdentifier == claudeBundleID
+        log("ready", to: times)
     }
 
     // MARK: Windows
@@ -141,12 +154,22 @@ enum DemoTake {
         let apps = NSWorkspace.shared.runningApplications
         guard let browser = apps.first(where: { $0.localizedName == request.browser }),
               let claude = apps.first(where: { $0.bundleIdentifier == claudeBundleID }),
-              let page = windows(of: browser).first(where: { title(of: $0).contains(request.title) }),
+              let page = pageWindow(of: browser, titled: request.title),
               let claudeWindow = mainWindow(of: claude) else { return false }
         let layout = request.layout
-        let half = layout.width / 2
+        let gap: CGFloat = 24
+        let half = (layout.width - gap) / 2
         place(claudeWindow, in: CGRect(x: layout.minX, y: layout.minY, width: half, height: layout.height))
-        place(page, in: CGRect(x: layout.minX + half, y: layout.minY, width: half, height: layout.height))
+        place(page, in: CGRect(x: layout.minX + half + gap, y: layout.minY, width: half, height: layout.height))
+        // Start with only the two demo apps visible, including behind the translucent overlay.
+        for app in apps where app.activationPolicy == .regular
+            && app.processIdentifier != browser.processIdentifier
+            && app.processIdentifier != claude.processIdentifier
+            && app.processIdentifier != ProcessInfo.processInfo.processIdentifier {
+            app.hide()
+        }
+        AXUIElementPerformAction(claudeWindow, kAXRaiseAction as CFString)
+        claude.activate()
         AXUIElementPerformAction(page, kAXRaiseAction as CFString)
         browser.activate()
         return true
@@ -156,6 +179,12 @@ enum DemoTake {
         var value: CFTypeRef?
         AXUIElementCopyAttributeValue(AXUIElementCreateApplication(app.processIdentifier), kAXWindowsAttribute as CFString, &value)
         return value as? [AXUIElement] ?? []
+    }
+
+    /// Use the regular browser window, including its tabs and address bar.
+    private static func pageWindow(of browser: NSRunningApplication, titled pageTitle: String) -> AXUIElement? {
+        let all = windows(of: browser)
+        return all.first { title(of: $0).hasPrefix(pageTitle + " - " + (browser.localizedName ?? "")) }
     }
 
     /// Claude has other, hidden windows; this is the one in use.
@@ -207,56 +236,8 @@ enum DemoTake {
         }
     }
 
-    private static func click(at point: CGPoint) async {
-        post(.leftMouseDown, at: onScreen(point))
-        try? await Task.sleep(for: .milliseconds(70))
-        post(.leftMouseUp, at: onScreen(point))
-    }
-
-    private static func drag(from start: CGPoint, to end: CGPoint) async {
-        post(.leftMouseDown, at: onScreen(start))
-        let steps = 36
-        for step in 1...steps {
-            let t = Double(step) / Double(steps)
-            let eased = 1 - pow(1 - t, 3)
-            post(.leftMouseDragged, at: onScreen(CGPoint(x: start.x + (end.x - start.x) * eased, y: start.y + (end.y - start.y) * eased)))
-            try? await Task.sleep(for: .milliseconds(16))
-        }
-        post(.leftMouseUp, at: onScreen(end))
-    }
-
     private static func post(_ type: CGEventType, at location: CGPoint) {
         CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: location, mouseButton: .left)?.post(tap: .cghidEventTap)
-    }
-
-    /// Types one character at a time, at a quick but human pace.
-    private static func type(_ text: String) async {
-        for character in text {
-            let units = Array(String(character).utf16)
-            for keyDown in [true, false] {
-                let event = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: keyDown)
-                event?.keyboardSetUnicodeString(stringLength: units.count, unicodeString: units)
-                event?.post(tap: .cghidEventTap)
-            }
-            try? await Task.sleep(for: .milliseconds(Int.random(in: 40...90)))
-        }
-    }
-
-    private static func press(_ key: CGKeyCode, flags: CGEventFlags = []) {
-        for keyDown in [true, false] {
-            let event = CGEvent(keyboardEventSource: nil, virtualKey: key, keyDown: keyDown)
-            event?.flags = flags
-            event?.post(tap: .cghidEventTap)
-        }
-    }
-
-    private static func cgFlags(_ modifiers: NSEvent.ModifierFlags) -> CGEventFlags {
-        var flags: CGEventFlags = []
-        if modifiers.contains(.command) { flags.insert(.maskCommand) }
-        if modifiers.contains(.shift) { flags.insert(.maskShift) }
-        if modifiers.contains(.option) { flags.insert(.maskAlternate) }
-        if modifiers.contains(.control) { flags.insert(.maskControl) }
-        return flags
     }
 
     private static func log(_ step: String, to times: URL) {

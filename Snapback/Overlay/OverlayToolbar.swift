@@ -33,11 +33,14 @@ struct OverlayToolbar: View {
             .buttonStyle(CapsuleButtonStyle())
             .help("Copy the annotated image")
             Button(action: onSend) {
-                Label("Claude", systemImage: "paperplane.fill")
+                Label("Send to Claude", systemImage: "paperplane.fill")
             }
             .buttonStyle(CapsuleButtonStyle(isProminent: true))
             .disabled(!hasMarkers)
             .help("Send to a new Claude Code chat")
+            #if DEBUG
+            .onGeometryChange(for: CGRect.self, of: { $0.frame(in: .global) }) { DemoTake.sendButton = $0 }
+            #endif
         }
         .padding(8)
         .glassEffect(.regular, in: .capsule)

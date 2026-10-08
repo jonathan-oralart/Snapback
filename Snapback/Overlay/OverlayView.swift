@@ -72,7 +72,7 @@ struct OverlayView: View {
                 .offset(x: imageRect.minX, y: imageRect.minY)
 
             if !isCropping, let id = session.selectedID, let index = session.markers.firstIndex(where: { $0.id == id }) {
-                let placement = placement(for: session.markers[index].shape, size: popupSize)
+                let placement = placement(for: session.markers[index], size: popupSize)
                 NoteEditor(note: $session.markers[index].note, focus: $focus)
                     .noteBubble(edge: placement.edge, tailOffset: placement.tailOffset)
                     .id(id)
@@ -480,13 +480,13 @@ struct OverlayView: View {
 
     private var screenSize: CGSize { session.capture.screen.frame.size }
 
-    /// Pins: to the right of the number, or the left if there's no room. Boxes: below, or above.
+    /// Pins sit beside their number. Boxes use the side with room and least overlap with other markers.
     /// The bubble's tail points back at the marker.
-    private func placement(for shape: Marker.Shape, size: CGSize) -> (offset: CGSize, edge: Edge, tailOffset: CGFloat) {
+    private func placement(for marker: Marker, size: CGSize) -> (offset: CGSize, edge: Edge, tailOffset: CGFloat) {
         let screen = CGRect(origin: .zero, size: screenSize).insetBy(dx: 8, dy: 8)
         let clampX = { (x: CGFloat) in min(max(x, screen.minX), screen.maxX - size.width) }
         let clampY = { (y: CGFloat) in min(max(y, screen.minY), screen.maxY - size.height) }
-        switch shape {
+        switch marker.shape {
         case .pin(let point):
             let center = onScreen(point)
             let reach = session.style.pinRadius * zoom + 4
@@ -498,10 +498,32 @@ struct OverlayView: View {
             let origin = onScreen(rect.origin)
             let box = CGRect(x: origin.x, y: origin.y, width: rect.width * zoom, height: rect.height * zoom)
             let anchorX = box.minX + min(box.width / 2, 40)
-            let fitsBelow = box.maxY + 4 + size.height <= screen.maxY
-            let y = fitsBelow ? box.maxY + 4 : box.minY - 4 - size.height
             let x = clampX(anchorX - 28)
-            return (CGSize(width: x, height: y), fitsBelow ? .top : .bottom, anchorX - x)
+            let below = CGRect(x: x, y: box.maxY + 4, width: size.width, height: size.height)
+            let above = CGRect(x: x, y: box.minY - 4 - size.height, width: size.width, height: size.height)
+            let obstacles = session.markers.filter { $0.id != marker.id }.map { other -> CGRect in
+                switch other.shape {
+                case .box(let rect):
+                    let origin = onScreen(rect.origin)
+                    return CGRect(origin: origin, size: CGSize(width: rect.width * zoom, height: rect.height * zoom))
+                        .insetBy(dx: -8, dy: -8)
+                case .pin(let point):
+                    let center = onScreen(point)
+                    let radius = session.style.pinRadius * zoom + 8
+                    return CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
+                }
+            }
+            func overlap(_ candidate: CGRect) -> CGFloat {
+                obstacles.reduce(0) { area, obstacle in
+                    let intersection = candidate.intersection(obstacle)
+                    return area + (intersection.isNull ? 0 : intersection.width * intersection.height)
+                }
+            }
+            let fitsBelow = screen.contains(below)
+            let fitsAbove = screen.contains(above)
+            let useBelow = fitsBelow != fitsAbove ? fitsBelow : overlap(below) <= overlap(above)
+            let y = clampY(useBelow ? below.minY : above.minY)
+            return (CGSize(width: x, height: y), useBelow ? .top : .bottom, anchorX - x)
         }
     }
 

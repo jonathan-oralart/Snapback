@@ -19,7 +19,7 @@ Requires macOS 26.4 and the [Claude desktop app](https://claude.ai/download). On
 
 | | |
 | --- | --- |
-| Capture the front window | ⌃⌥⌘C (change it in Settings) |
+| Capture the front window | ⇧⌘2 (change it in Settings) |
 | Record the screen / stop | ⌃⌥⌘R (change it in Settings) |
 | Drop a pin / draw a box | Click / drag |
 | Move or resize | Drag a marker, or a box's corner handles |

@@ -23,9 +23,6 @@ struct SnapbackApp: App {
         } label: {
             Image(nsImage: menuBarIcon)
         }
-        Settings {
-            SettingsView()
-        }
         Window("Snapback History", id: "history") {
             HistoryView()
         }
@@ -36,7 +33,6 @@ struct SnapbackApp: App {
 
 private struct MenuContent: View {
     let updater: SPUUpdater
-    @Environment(\.openSettings) private var openSettings
     @Environment(\.openWindow) private var openWindow
     private let store = CaptureStore.shared
 
@@ -71,8 +67,7 @@ private struct MenuContent: View {
         }
         .disabled(isDebugBuild)
         Button("Settings…") {
-            // SwiftUI identifies its Settings window as "com_apple_SwiftUI_Settings_window".
-            AppWindows.show(id: "Settings") { openSettings() }
+            SettingsWindow.show()
         }
         .keyboardShortcut(",")
         Button("Quit Snapback") {

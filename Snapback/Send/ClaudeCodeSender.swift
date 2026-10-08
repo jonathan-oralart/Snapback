@@ -13,13 +13,7 @@ enum ClaudeCodeSender {
         // Bring Claude to the front with the new session, rather than leaving the previous app focused.
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = true
-        var url = URL(string: "claude://code/new")!
-        #if DEBUG
-        // A demo take opens the session in the demo's folder, as Finder's "New Claude Code Session Here" does.
-        if let folder = DemoTake.folder {
-            url.append(queryItems: [URLQueryItem(name: "folder", value: folder.path)])
-        }
-        #endif
+        let url = URL(string: "claude://code/new")!
         _ = try? await NSWorkspace.shared.open(url, configuration: configuration)
 
         guard await waitForClaudeInFront() else {
@@ -32,7 +26,10 @@ enum ClaudeCodeSender {
             notify("Snapback needs Accessibility access to paste. The screenshot is on the clipboard — paste it with ⌘V.")
             return
         }
-        pressCommandV()
+        guard pasteImage() else {
+            notify("Couldn't choose Paste in Claude. The screenshot is on the clipboard.")
+            return
+        }
         SendSound.current.play()
     }
 
@@ -44,14 +41,32 @@ enum ClaudeCodeSender {
         return false
     }
 
-    private static func pressCommandV() {
-        let source = CGEventSource(stateID: .combinedSessionState)
-        let vKey: CGKeyCode = 0x09
-        for keyDown in [true, false] {
-            let event = CGEvent(keyboardEventSource: source, virtualKey: vKey, keyDown: keyDown)
-            event?.flags = .maskCommand
-            event?.post(tap: .cghidEventTap)
+    /// Invoke Claude's Paste menu item once instead of synthesizing keyboard events.
+    private static func pasteImage() -> Bool {
+        guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: claudeBundleID).first else { return false }
+        let application = AXUIElementCreateApplication(app.processIdentifier)
+        var menuBar: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(application, kAXMenuBarAttribute as CFString, &menuBar) == .success,
+              let menuBar, CFGetTypeID(menuBar) == AXUIElementGetTypeID() else { return false }
+
+        func children(_ element: AXUIElement) -> [AXUIElement] {
+            var value: CFTypeRef?
+            AXUIElementCopyAttributeValue(element, kAXChildrenAttribute as CFString, &value)
+            return value as? [AXUIElement] ?? []
         }
+        for entry in children(menuBar as! AXUIElement) {
+            for menu in children(entry) {
+                for item in children(menu) {
+                    var key: CFTypeRef?
+                    var modifiers: CFTypeRef?
+                    AXUIElementCopyAttributeValue(item, kAXMenuItemCmdCharAttribute as CFString, &key)
+                    AXUIElementCopyAttributeValue(item, kAXMenuItemCmdModifiersAttribute as CFString, &modifiers)
+                    guard (key as? String)?.lowercased() == "v", (modifiers as? NSNumber)?.intValue == 0 else { continue }
+                    return AXUIElementPerformAction(item, kAXPressAction as CFString) == .success
+                }
+            }
+        }
+        return false
     }
 
     private static func notify(_ message: String) {

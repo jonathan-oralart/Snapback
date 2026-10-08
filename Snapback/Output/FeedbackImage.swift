@@ -3,12 +3,40 @@ import AppKit
 /// The annotated screenshot: the window (or a recording's kept frames, in a grid) with markers, and the numbered
 /// notes in a card underneath. Everything travels in the one image, so it works wherever an image can be pasted.
 enum FeedbackImage {
+    /// Size of the notes embedded below the screenshot, independent of marker size.
+    enum TextSize: String, CaseIterable {
+        case standard, large, extraLarge
+
+        static let defaultsKey = "annotationTextSize"
+        static var current: Self {
+            UserDefaults.standard.string(forKey: defaultsKey).flatMap(Self.init(rawValue:)) ?? .standard
+        }
+
+        var title: String {
+            switch self {
+            case .standard: "Standard"
+            case .large: "Large"
+            case .extraLarge: "Extra large"
+            }
+        }
+
+        var points: CGFloat {
+            switch self {
+            case .standard: 15
+            case .large: 22
+            case .extraLarge: 30
+            }
+        }
+    }
+
     /// Like a macOS window screenshot: each frame floats on transparent padding with a soft shadow.
     /// The notes sit in a white card underneath, so they stay readable on any background. With no markers there's no card.
     static func png(for session: AnnotationSession) -> Data {
         let frames = session.framesToSend
         let style = session.style
-        // Legend badges keep the full size so their numbers stay readable next to the notes.
+        let textSize = TextSize.current
+        let textFactor = textSize.points / 15
+        // Legend badges follow the note size, independently of the markers on the screenshot.
         let legendStyle = MarkerStyle(tint: style.tint)
         // Several frames are drawn at one pixel per point: the image is already large, and gets scaled down to be read.
         let scale = frames.count > 1 ? 1 : session.capture.pixelScale
@@ -20,9 +48,10 @@ enum FeedbackImage {
         let margin = 48 * scale
         let gap = 28 * scale
         let cardGap = 20 * scale
-        let padding = 16 * scale
-        let badgeSize = legendStyle.pinRadius * 2 * scale
-        let rowSpacing = 10 * scale
+        let padding = (16 + (textSize.points - 15) * 0.8) * scale
+        let badgeScale = scale * textFactor
+        let badgeSize = legendStyle.pinRadius * 2 * badgeScale
+        let rowSpacing = 10 * badgeScale
 
         // As square as possible, so the frames stay large when the image is scaled to fit.
         let columns = (1...frames.count).min { a, b in
@@ -47,21 +76,21 @@ enum FeedbackImage {
             explanation = "Frames 1–\(frames.count) are stills from one screen recording, in time order. " + explanation
         }
         let header = NSAttributedString(string: explanation, attributes: [
-            .font: NSFont.systemFont(ofSize: 13 * scale, weight: .medium),
+            .font: NSFont.systemFont(ofSize: (13 + (textSize.points - 15) / 2) * scale, weight: .medium),
             .foregroundColor: NSColor(white: 0.4, alpha: 1),
         ])
         let notes = frames.flatMap(\.markers).map { marker in
             let text = marker.note.trimmingCharacters(in: .whitespacesAndNewlines)
             return NSAttributedString(string: text.isEmpty ? "(no note)" : text, attributes: [
-                .font: NSFont.systemFont(ofSize: 15 * scale),
+                .font: NSFont.systemFont(ofSize: textSize.points * scale),
                 .foregroundColor: NSColor(white: 0.1, alpha: 1),
             ])
         }
 
-        let noteX = padding + badgeSize + 10 * scale
+        let noteX = padding + badgeSize + 10 * badgeScale
         let headerHeight = height(of: header, width: gridWidth - padding * 2)
         let noteHeights = notes.map { max(height(of: $0, width: gridWidth - noteX - padding), badgeSize) }
-        let cardHeight = (padding + headerHeight + 14 * scale
+        let cardHeight = (padding + headerHeight + 14 * badgeScale
             + noteHeights.reduce(0, +) + rowSpacing * CGFloat(max(notes.count - 1, 0)) + padding).rounded(.up)
 
         let pixelWidth = Int(gridWidth + margin * 2)
@@ -128,11 +157,11 @@ enum FeedbackImage {
             NSGraphicsContext.current = NSGraphicsContext(cgContext: cg, flipped: true)
             var y = cardRect.minY + padding
             header.draw(with: CGRect(x: cardRect.minX + padding, y: y, width: gridWidth - padding * 2, height: headerHeight), options: drawingOptions)
-            y += headerHeight + 14 * scale
+            y += headerHeight + 14 * badgeScale
 
             for (index, note) in notes.enumerated() {
                 let lineHeight = (note.attribute(.font, at: 0, effectiveRange: nil) as? NSFont).map { NSLayoutManager().defaultLineHeight(for: $0) } ?? badgeSize
-                legendStyle.paintBadge(index + 1, at: CGPoint(x: cardRect.minX + padding + badgeSize / 2, y: y + max(lineHeight, badgeSize) / 2), scale: scale, selected: false)
+                legendStyle.paintBadge(index + 1, at: CGPoint(x: cardRect.minX + padding + badgeSize / 2, y: y + max(lineHeight, badgeSize) / 2), scale: badgeScale, selected: false)
                 let textY = y + max(0, (badgeSize - lineHeight) / 2)
                 note.draw(with: CGRect(x: cardRect.minX + noteX, y: textY, width: gridWidth - noteX - padding, height: noteHeights[index]), options: drawingOptions)
                 y += noteHeights[index] + rowSpacing

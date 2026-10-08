@@ -14,9 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// icon can be hidden by the notch or a menu bar manager and opening would otherwise seem to do nothing.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
         if !hasVisibleWindows {
-            AppWindows.show(id: "Settings") {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-            }
+            SettingsWindow.show()
         }
         return true
     }

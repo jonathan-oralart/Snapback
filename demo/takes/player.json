@@ -1,0 +1,36 @@
+{
+  "windowSize": [
+    600,
+    700
+  ],
+  "markers": [
+    {
+      "kind": "box",
+      "rect": [
+        [
+          120,
+          403
+        ],
+        [
+          477,
+          43
+        ]
+      ],
+      "note": "Wrap the title inside the card."
+    },
+    {
+      "kind": "box",
+      "rect": [
+        [
+          126,
+          180
+        ],
+        [
+          348,
+          216
+        ]
+      ],
+      "note": "Make the album artwork square."
+    }
+  ]
+}

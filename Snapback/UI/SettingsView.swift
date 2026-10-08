@@ -6,6 +6,8 @@ struct SettingsView: View {
     @State private var opensAtLogin = SMAppService.mainApp.status == .enabled
     @AppStorage(SendSound.defaultsKey) private var sendSound = SendSound.button
 
+    @AppStorage(FeedbackImage.TextSize.defaultsKey) private var annotationTextSize = FeedbackImage.TextSize.standard
+
     var body: some View {
         Form {
             Section {
@@ -30,6 +32,18 @@ struct SettingsView: View {
                     }
                 }
                 .onChange(of: sendSound) { _, sound in sound.play() }
+            }
+
+            Section {
+                Picker("Annotation text size", selection: $annotationTextSize) {
+                    ForEach(FeedbackImage.TextSize.allCases, id: \.self) { size in
+                        Text(size.title).tag(size)
+                    }
+                }
+            } header: {
+                Text("Exported image")
+            } footer: {
+                Text("Controls the numbered notes below the screenshot when you send or copy an image.")
             }
 
             Section {
@@ -60,8 +74,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 460)
-        .fixedSize(horizontal: false, vertical: true)
+        .frame(width: 460, height: min(720, (NSScreen.main?.visibleFrame.height ?? 760) - 40))
     }
 }
 
@@ -81,5 +94,24 @@ private struct FixedShortcut: View {
                 .font(.callout.monospaced())
                 .foregroundStyle(.secondary)
         }
+    }
+}
+
+/// One settings window, shared by the menu and reopening the app from Finder.
+enum SettingsWindow {
+    private static var window: NSWindow?
+
+    static func show() {
+        if let window {
+            AppWindows.show(window)
+            return
+        }
+        let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView()))
+        window.title = "Snapback Settings"
+        window.styleMask = [.titled, .closable]
+        window.isReleasedWhenClosed = false
+        window.center()
+        self.window = window
+        AppWindows.show(window)
     }
 }

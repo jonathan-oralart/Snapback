@@ -16,7 +16,7 @@ The Xcode project is generated from `project.yml` with XcodeGen; edit that and r
 
 ## Demo
 
-`demo/<name>` are small pages for the README GIF. `scripts/record-demo.sh <name>` records a take: Snapback Dev replays `demo/takes/<name>.json` (`DemoTake`, Debug builds only) with real pointer and key events, sends it to a Claude Code session in the demo's folder and submits it; the page reloads when its file changes. Usage is at the top of the script.
+`demo/<name>` are templates for the README GIF. The working demo is a separate Git repo at `../snapback-demo`, served on port 8766; select that folder in Claude before recording. `scripts/record-demo.sh <name>` replays `demo/takes/<name>.json` through the real annotation session (Debug builds only), using the take's exact window size. Click the visible Send to Claude button, then verify the single attached image and submit with no text after a short pause. The page reloads after Claude edits it. See `demo/README.md`.
 
 ## App icon
 
@@ -28,5 +28,5 @@ The Xcode project is generated from `project.yml` with XcodeGen; edit that and r
 - `Capture`: front window capture with ScreenCaptureKit, and `ScreenRecorder`, which records the front window's display to a temporary HEVC movie (pointer shown, Snapback's own windows such as the stop pill left out, 60s limit).
 - `Overlay`: `Marker` and `AnnotationSession` (frames, crop, selection, undo), `MarkerStyle` (marker drawing, shared with the image), the overlay view, note bubble, toolbar and panel. A screenshot is one frame; a recording (`Recording`: frame times and exact frame decoding) has up to six kept frames, picked on `RecordingTimeline`, with markers numbered across them.
 - `Output`: `FeedbackImage` renders the PNG that's sent: shadowed window (or a recording's frames in a grid) with markers, notes in a card underneath.
-- `Send`: opens `claude://code/new`, then pastes the image with a synthetic ⌘V and plays the sound chosen in Settings (Copy plays it too). The sounds are SND01 "sine" from snd.dev; keep the files unmodified (their terms).
+- `Send`: opens `claude://code/new`, then pastes the image using Claude's Paste menu action and plays the sound chosen in Settings (Copy plays it too). The sounds are SND01 "sine" from snd.dev; keep the files unmodified (their terms).
 - `Storage`: the last 20 sent or saved captures in `~/Library/Application Support/Snapback/Captures`, reopened from the menu's Recent submenu or the history window (`UI`). `capture.json` stores markers as `{kind, rect, note}`; keep that format readable. A recording keeps `recording.mov` instead of `window.png`, and its crop and frames (exact movie times) in `capture.json`.

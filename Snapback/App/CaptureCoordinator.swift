@@ -6,6 +6,12 @@ final class CaptureCoordinator {
 
     private var panel: OverlayPanel?
     private var pill: RecordingPill?
+    #if DEBUG
+    /// The real overlay session and send progress, for demo takes.
+    private(set) var demoSession: AnnotationSession?
+    private(set) var demoIsSending = false
+
+    #endif
     /// A capture from history is being opened; recordings take a moment, and steps shouldn't overtake each other.
     private var isNavigating = false
 
@@ -92,6 +98,9 @@ final class CaptureCoordinator {
 
     /// Shows a session in the overlay, reusing the open overlay when stepping through history.
     private func present(_ session: AnnotationSession) {
+        #if DEBUG
+        demoSession = session
+        #endif
         let view = OverlayView(
             session: session,
             animatesIn: panel == nil,
@@ -146,6 +155,9 @@ final class CaptureCoordinator {
             dismiss()
             return
         }
+        #if DEBUG
+        demoIsSending = destination == .claude
+        #endif
         // Close first so the overlay is gone the moment you press the button; render once it's off screen.
         dismiss()
         // Copy sounds the moment you press it; the image follows once rendered.
@@ -160,10 +172,16 @@ final class CaptureCoordinator {
             case .clipboard: Clipboard.copy(png: png)
             }
             CaptureStore.shared.save(session, png: png)
+            #if DEBUG
+            demoIsSending = false
+            #endif
         }
     }
 
     private func dismiss() {
+        #if DEBUG
+        demoSession = nil
+        #endif
         panel?.orderOut(nil)
         panel = nil
     }
