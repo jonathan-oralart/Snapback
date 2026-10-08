@@ -30,6 +30,8 @@ Requires macOS 26.4 and the [Claude desktop app](https://claude.ai/download). On
 
 The last 20 captures are kept under **Recent** in the menu bar icon.
 
+The send sound (pick one or turn it off in Settings) is from [SND](https://snd.dev)'s SND01 "sine" kit by Yasuhiro Tsuchiya.
+
 ## Build
 
 Needs Xcode 26 and [XcodeGen](https://github.com/yonaskolb/XcodeGen).

@@ -26,6 +26,7 @@ enum ClaudeCodeSender {
             return
         }
         pressCommandV()
+        SendSound.current.play()
     }
 
     private static func waitForClaudeInFront() async -> Bool {

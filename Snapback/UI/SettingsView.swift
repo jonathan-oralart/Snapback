@@ -4,6 +4,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @State private var opensAtLogin = SMAppService.mainApp.status == .enabled
+    @AppStorage(SendSound.defaultsKey) private var sendSound = SendSound.button
 
     var body: some View {
         Form {
@@ -22,6 +23,12 @@ struct SettingsView: View {
                             opensAtLogin = SMAppService.mainApp.status == .enabled
                         }
                     }
+                Picker("Sound when sent to Claude", selection: $sendSound) {
+                    ForEach(SendSound.allCases) { sound in
+                        Text(sound.title).tag(sound)
+                    }
+                }
+                .onChange(of: sendSound) { _, sound in sound.play() }
             }
 
             Section {

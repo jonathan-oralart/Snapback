@@ -31,5 +31,5 @@ The Xcode project is generated from `project.yml` with XcodeGen; edit that and r
 - `Capture`: front window capture with ScreenCaptureKit.
 - `Overlay`: `Marker` and `AnnotationSession` (selection, undo), `MarkerStyle` (marker drawing, shared with the image), the overlay view, note bubble, toolbar and panel.
 - `Output`: `FeedbackImage` renders the PNG that's sent: shadowed window with markers, notes in a card underneath.
-- `Send`: opens `claude://code/new`, then pastes the image with a synthetic ⌘V.
+- `Send`: opens `claude://code/new`, then pastes the image with a synthetic ⌘V and plays the send sound chosen in Settings. The sounds are SND01 "sine" from snd.dev; keep the files unmodified (their terms).
 - `Storage`: the last 20 sent or saved captures in `~/Library/Application Support/Snapback/Captures`, reopened from the menu's Recent submenu or the history window (`UI`). `capture.json` stores markers as `{kind, rect, note}`; keep that format readable.
