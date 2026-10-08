@@ -6,7 +6,7 @@ Snapback is a macOS menu bar app for giving visual feedback to Claude Code. Pres
 
 ## Install
 
-Download the latest `Snapback-x.y.z.dmg` from [Releases](https://github.com/jonathan-oralart/Snapback/releases/latest), open it and drag Snapback to Applications. It updates itself.
+Download the latest `Snapback-x.y.z.dmg` from [Releases](https://github.com/jonathan-oralart/snapback/releases/latest), open it and drag Snapback to Applications. It updates itself.
 
 Requires macOS 26.4 and the [Claude desktop app](https://claude.ai/download). On first launch Snapback asks for:
 

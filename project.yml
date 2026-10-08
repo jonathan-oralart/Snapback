@@ -32,7 +32,7 @@ targets:
       properties:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        SUFeedURL: https://github.com/jonathan-oralart/Snapback/releases/latest/download/appcast.xml
+        SUFeedURL: https://github.com/jonathan-oralart/snapback/releases/latest/download/appcast.xml
         SUPublicEDKey: Ob3MTl0a7pNAqP09JwDWyTsCV2XfUBY83sxPpCmJa0M=
         SUEnableAutomaticChecks: true
     settings:
