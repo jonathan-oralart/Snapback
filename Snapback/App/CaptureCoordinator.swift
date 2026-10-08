@@ -72,7 +72,8 @@ final class CaptureCoordinator {
     }
 
     private func close(_ session: AnnotationSession, to destination: Destination) {
-        guard !session.markers.isEmpty else { return }
+        // Only Copy works without markers: it copies the plain window.
+        guard destination == .clipboard || !session.markers.isEmpty else { return }
         guard destination != .recent || session.hasChanges else {
             dismiss()
             return

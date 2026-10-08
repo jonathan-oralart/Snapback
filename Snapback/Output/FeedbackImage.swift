@@ -4,7 +4,7 @@ import AppKit
 /// Everything travels in the one image, so it works wherever an image can be pasted.
 enum FeedbackImage {
     /// Like a macOS window screenshot: the window floats on transparent padding with a soft shadow.
-    /// The notes sit in a white card underneath, so they stay readable on any background.
+    /// The notes sit in a white card underneath, so they stay readable on any background. With no markers there's no card.
     static func png(for session: AnnotationSession) -> Data {
         let capture = session.capture
         let style = session.style
@@ -40,7 +40,8 @@ enum FeedbackImage {
             + noteHeights.reduce(0, +) + rowSpacing * CGFloat(max(notes.count - 1, 0)) + padding).rounded(.up)
 
         let pixelWidth = Int(windowWidth + margin * 2)
-        let pixelHeight = Int((margin + windowHeight + cardGap + cardHeight + margin).rounded(.up))
+        let hasCard = !notes.isEmpty
+        let pixelHeight = Int((margin + windowHeight + (hasCard ? cardGap + cardHeight : 0) + margin).rounded(.up))
         let total = CGFloat(pixelHeight)
 
         guard let cg = CGContext(
@@ -55,10 +56,12 @@ enum FeedbackImage {
         cg.saveGState()
         cg.setShadow(offset: CGSize(width: 0, height: -12 * scale), blur: 36 * scale, color: NSColor.black.withAlphaComponent(0.4).cgColor)
         cg.draw(capture.image, in: windowRect)
-        cg.setShadow(offset: CGSize(width: 0, height: -4 * scale), blur: 16 * scale, color: NSColor.black.withAlphaComponent(0.25).cgColor)
-        cg.addPath(CGPath(roundedRect: cardRect, cornerWidth: 12 * scale, cornerHeight: 12 * scale, transform: nil))
-        cg.setFillColor(NSColor.white.cgColor)
-        cg.fillPath()
+        if hasCard {
+            cg.setShadow(offset: CGSize(width: 0, height: -4 * scale), blur: 16 * scale, color: NSColor.black.withAlphaComponent(0.25).cgColor)
+            cg.addPath(CGPath(roundedRect: cardRect, cornerWidth: 12 * scale, cornerHeight: 12 * scale, transform: nil))
+            cg.setFillColor(NSColor.white.cgColor)
+            cg.fillPath()
+        }
         cg.restoreGState()
 
         // Markers and notes top-left-origin, like the overlay.
@@ -67,20 +70,22 @@ enum FeedbackImage {
         cg.translateBy(x: margin, y: margin)
         style.paint(session.markers, within: session.bounds, selectedID: nil, draft: nil, scale: scale, in: cg)
 
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = NSGraphicsContext(cgContext: cg, flipped: true)
-        var y = windowHeight + cardGap + padding
-        header.draw(with: CGRect(x: padding, y: y, width: windowWidth - padding * 2, height: headerHeight), options: drawingOptions)
-        y += headerHeight + 14 * scale
+        if hasCard {
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current = NSGraphicsContext(cgContext: cg, flipped: true)
+            var y = windowHeight + cardGap + padding
+            header.draw(with: CGRect(x: padding, y: y, width: windowWidth - padding * 2, height: headerHeight), options: drawingOptions)
+            y += headerHeight + 14 * scale
 
-        for (index, note) in notes.enumerated() {
-            let lineHeight = (note.attribute(.font, at: 0, effectiveRange: nil) as? NSFont).map { NSLayoutManager().defaultLineHeight(for: $0) } ?? badgeSize
-            legendStyle.paintBadge(index + 1, at: CGPoint(x: padding + badgeSize / 2, y: y + max(lineHeight, badgeSize) / 2), scale: scale, selected: false)
-            let textY = y + max(0, (badgeSize - lineHeight) / 2)
-            note.draw(with: CGRect(x: noteX, y: textY, width: windowWidth - noteX - padding, height: noteHeights[index]), options: drawingOptions)
-            y += noteHeights[index] + rowSpacing
+            for (index, note) in notes.enumerated() {
+                let lineHeight = (note.attribute(.font, at: 0, effectiveRange: nil) as? NSFont).map { NSLayoutManager().defaultLineHeight(for: $0) } ?? badgeSize
+                legendStyle.paintBadge(index + 1, at: CGPoint(x: padding + badgeSize / 2, y: y + max(lineHeight, badgeSize) / 2), scale: scale, selected: false)
+                let textY = y + max(0, (badgeSize - lineHeight) / 2)
+                note.draw(with: CGRect(x: noteX, y: textY, width: windowWidth - noteX - padding, height: noteHeights[index]), options: drawingOptions)
+                y += noteHeights[index] + rowSpacing
+            }
+            NSGraphicsContext.restoreGraphicsState()
         }
-        NSGraphicsContext.restoreGraphicsState()
 
         guard let image = cg.makeImage() else { return Data() }
         return NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:]) ?? Data()

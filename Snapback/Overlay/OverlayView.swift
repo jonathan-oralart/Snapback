@@ -209,7 +209,7 @@ struct OverlayView: View {
     private func copyKey() {
         if focus == .note {
             NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
-        } else if !session.markers.isEmpty {
+        } else {
             onCopy()
         }
     }

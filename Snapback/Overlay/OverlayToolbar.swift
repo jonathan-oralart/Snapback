@@ -31,7 +31,6 @@ struct OverlayToolbar: View {
                 Label("Copy", systemImage: "doc.on.doc")
             }
             .buttonStyle(CapsuleButtonStyle())
-            .disabled(!hasMarkers)
             .help("Copy the annotated image (⌘C)")
             Button(action: onSend) {
                 Label("Claude", systemImage: "paperplane.fill")
