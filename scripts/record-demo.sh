@@ -4,7 +4,7 @@
 #
 #   scripts/record-demo.sh <name> --serve       serve the separate demo repo, open the page and lay out the windows (leave it running)
 #   scripts/record-demo.sh <name> --save-take   save your latest capture's markers as the take to replay
-#   scripts/record-demo.sh <name>               record a take
+#   scripts/record-demo.sh <name>               arm and guide a take (CleanShot records separately)
 #
 # Once: install Snapback Dev with scripts/dev.sh and run --serve; the page must come from it, not a file, to reload
 # itself. Then mark the page up once by hand with Snapback Dev and run --save-take.
@@ -129,4 +129,4 @@ while (( EPOCHREALTIME - still_since < 5 )); do
   now=$(stat -f %Fm "$PAGE")
   if [[ $now != $last ]]; then last=$now; still_since=$EPOCHREALTIME; fi
 done
-echo "The page has updated. Hold on the result, then stop CleanShot and save the recording under build/demo/."
+echo "The demo file changed. Verify every requested fix in Chrome (reload if needed), hold on the final result, then stop CleanShot and save under build/demo/."

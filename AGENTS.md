@@ -16,7 +16,7 @@ The Xcode project is generated from `project.yml` with XcodeGen; edit that and r
 
 ## Demo
 
-`demo/<name>` are templates for the README GIF. The working demo is a separate Git repo at `../snapback-demo`, served on port 8766; select that folder in Claude before recording. `scripts/record-demo.sh <name>` replays `demo/takes/<name>.json` through the real annotation session (Debug builds only), using the take's exact window size. Click the visible Send to Claude button, then verify the single attached image and submit with no text after a short pause. The page reloads after Claude edits it. See `demo/README.md`.
+`demo/<name>` are templates for the README GIF. The working demo is a separate Git repo at `../snapback-demo`, served on port 8766; select that folder in Claude before recording. `scripts/record-demo.sh <name>` replays `demo/takes/<name>.json` through the real annotation session (Debug builds only), using the take's exact window size. Click the visible Send to Claude button, then verify the single attached image and submit with no text after a short pause. The page reloads after Claude edits it. Read `demo/HANDOFF.md` for practical lessons and `demo/README.md` for setup and the tracked GIF exporter.
 
 ## App icon
 

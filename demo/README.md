@@ -2,6 +2,8 @@
 
 The demo is a separate repository, so Claude can find the page from the screenshot alone. The pages in this directory are source templates; Claude edits the working copy outside Snapback.
 
+Agents: read [HANDOFF.md](HANDOFF.md) first for the recording pitfalls and manual steps from the successful take.
+
 One-time setup (from the Snapback repository, with the destination not yet created):
 
 ```sh
@@ -41,4 +43,20 @@ git -C ../snapback-demo restore index.html
 
 Recording refuses uncommitted edits instead of overwriting them. `DEMO_DIR`, `PORT`, `LAYOUT`, and `BROWSER` can be overridden. To record a different annotation, mark up the same-sized window by hand, save it, and run `scripts/record-demo.sh player --save-take` (requires `jq`).
 
-The published cut is `../docs/demo.gif`; raw takes and editing intermediates stay in the ignored `../build/demo/` directory.
+## Exporting
+
+Run these commands from the Snapback repository. The exporter requires Python 3 and `ffmpeg`. Create a JSON list of `[start_seconds, end_seconds, speed]` cuts for your new recording; speed `1` preserves real time. Choose cuts after reviewing the footage, keeping the shortcut, both annotations, Send click, paste pause and final result.
+
+The checked-in `demo/cuts/player-cleanshot.json` preserves the approved October 2026 edit for `build/demo/chrome-cleanshot-raw.mp4`. Its timestamps apply only to that original recording:
+
+```sh
+python3 scripts/export-demo.py build/demo/chrome-cleanshot-raw.mp4 demo/cuts/player-cleanshot.json
+```
+
+This writes `demo.mp4`, `demo.gif` and `contact.jpg` to ignored `build/demo/export/` (override with `--output`). It preserves the recording's aspect ratio, exports at 1280 pixels wide and holds the last frame for three seconds. Re-running overwrites those previews. Review the motion and final frame, then publish:
+
+```sh
+cp build/demo/export/demo.gif docs/demo.gif
+```
+
+The README already embeds `docs/demo.gif`. Keep raw footage and editing intermediates under ignored `build/demo/`; commit the final GIF and any reusable take/cut changes.
