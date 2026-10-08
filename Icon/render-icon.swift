@@ -1,6 +1,6 @@
-// Draws the app icon's layers into Snapback/AppIcon.icon/Assets.
+// Draws the app icon's layers into Snapback/AppIcon.icon/Assets and the dev build's Snapback/AppIconDev.icon/Assets.
 // Run from the repo root: swiftc -parse-as-library -default-isolation MainActor -o /tmp/render-icon Icon/render-icon.swift && /tmp/render-icon
-// The icon's background colour is the `fill` in Snapback/AppIcon.icon/icon.json.
+// The icon's background colour is the `fill` in each icon's icon.json (orange for the dev build).
 import AppKit
 import SwiftUI
 
@@ -67,7 +67,9 @@ func render(_ layer: some View, to name: String) throws {
     let renderer = ImageRenderer(content: layer.frame(width: 824, height: 824))
     renderer.scale = 1024 / 824
     let png = NSBitmapImageRep(cgImage: renderer.cgImage!).representation(using: .png, properties: [:])!
-    try png.write(to: URL(filePath: "Snapback/AppIcon.icon/Assets/\(name).png"))
+    for icon in ["AppIcon", "AppIconDev"] {
+        try png.write(to: URL(filePath: "Snapback/\(icon).icon/Assets/\(name).png"))
+    }
 }
 
 @main struct RenderIcon {

@@ -53,6 +53,12 @@ targets:
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: YES
         SWIFT_VERSION: 6.0
+      configs:
+        # A separate app for development, so its permission grants and settings never mix with a release install.
+        Debug:
+          PRODUCT_BUNDLE_IDENTIFIER: com.oralart.snapback.dev
+          INFOPLIST_KEY_CFBundleDisplayName: Snapback Dev
+          ASSETCATALOG_COMPILER_APPICON_NAME: AppIconDev
 schemes:
   Snapback:
     build:

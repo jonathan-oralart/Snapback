@@ -43,6 +43,8 @@ open Snapback.xcodeproj
 
 Set your own team in `project.yml` (`DEVELOPMENT_TEAM`) to sign it.
 
+`scripts/dev.sh` builds, installs and relaunches a separate **Snapback Dev** app, so a development copy keeps its own permissions and settings next to a release install.
+
 ## Releasing
 
 One-time setup:

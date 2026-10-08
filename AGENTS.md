@@ -4,16 +4,9 @@ Snapback is a menu bar app: press a shortcut, annotate the front window with num
 
 ## Builds
 
-Test by hand; screen automation is unreliable with the overlay. Build, install and relaunch:
+Test by hand; screen automation is unreliable with the overlay. Build, install and relaunch with `scripts/dev.sh`. It installs the Debug build as `/Applications/Snapback Dev.app` (bundle ID `com.oralart.snapback.dev`, the user's day-to-day copy) and relaunches it. Writing to /Applications needs the sandbox off.
 
-```sh
-pkill -x Snapback || true
-xcodebuild -project Snapback.xcodeproj -scheme Snapback -configuration Debug -derivedDataPath /tmp/snapback-derived -allowProvisioningUpdates build
-rm -rf /Applications/Snapback.app && ditto /tmp/snapback-derived/Build/Products/Debug/Snapback.app /Applications/Snapback.app
-open /Applications/Snapback.app
-```
-
-Keep Apple Development signing: Screen Recording and Accessibility grants are tied to the signature.
+Keep Apple Development signing and the separate Debug bundle ID: Screen Recording and Accessibility grants are tied to the signature, so they survive rebuilds but break if a release and a dev build share an ID.
 
 The Xcode project is generated from `project.yml` with XcodeGen; edit that and run `xcodegen generate`.
 
@@ -23,7 +16,7 @@ The Xcode project is generated from `project.yml` with XcodeGen; edit that and r
 
 ## App icon
 
-`Snapback/AppIcon.icon` is an Icon Composer icon: the background colour is the `fill` in its `icon.json`, and the artwork layers are drawn by `Icon/render-icon.swift` (run command at the top of that file). Edit the script and re-run it rather than editing the PNGs.
+`Snapback/AppIcon.icon` is an Icon Composer icon: the background colour is the `fill` in its `icon.json`, and the artwork layers are drawn by `Icon/render-icon.swift` (run command at the top of that file). Edit the script and re-run it rather than editing the PNGs. The Debug build uses `Snapback/AppIconDev.icon`, the same artwork on orange; the script writes both.
 
 ## Architecture
 
