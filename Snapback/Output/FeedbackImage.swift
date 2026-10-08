@@ -82,6 +82,9 @@ enum FeedbackImage {
         if frames.count > 1 {
             explanation = "Frames 1–\(frames.count) are stills from one screen recording, in time order. " + explanation
         }
+        if let recording = session.recording, frames.contains(where: { $0.time.map { !recording.clicks(at: $0).isEmpty } ?? false }) {
+            explanation += " White rings show mouse clicks: filled while the button is held down, hollow where it was let go, dashed for a right click."
+        }
         let header = NSAttributedString(string: explanation, attributes: [
             .font: NSFont.systemFont(ofSize: (13 + (textSize.points - 15) / 2) * scale, weight: .medium),
             .foregroundColor: NSColor(white: 0.4, alpha: 1),

@@ -24,11 +24,13 @@ struct SavedCapture: Identifiable, Codable {
     }
 }
 
-/// The frames picked from a screen recording, and how they're cropped.
+/// The frames picked from a screen recording, how they're cropped, and the clicks drawn on them.
 struct SavedRecording: Codable {
     /// In display points.
     var crop: CGRect
     var frames: [SavedFrame]
+    /// Missing from recordings saved before clicks were logged.
+    var clicks: [Click]?
 }
 
 /// Saved as `{timeValue, timescale, markers}`: the time exactly as the movie has it, so the same frame comes back.
@@ -96,8 +98,9 @@ final class CaptureStore {
             frame: capture.frame,
             markers: session.recording == nil ? session.frames[0].markers : [],
             style: session.style,
-            recording: session.recording.map { _ in
-                SavedRecording(crop: session.crop, frames: session.frames.map { SavedFrame(time: $0.time!, markers: $0.markers) })
+            recording: session.recording.map {
+                SavedRecording(crop: session.crop, frames: session.frames.map { SavedFrame(time: $0.time!, markers: $0.markers) },
+                               clicks: $0.clicks)
             }
         )
 
@@ -155,7 +158,8 @@ final class CaptureStore {
     /// A recording, with its kept frames decoded again from the movie.
     private func restore(_ saved: SavedCapture, recording savedRecording: SavedRecording) async -> AnnotationSession? {
         guard let screen = NSScreen.main,
-              let recording = try? await Recording.open(folder(of: saved.id).appending(path: "recording.mov"), deletesFile: false)
+              let recording = try? await Recording.open(folder(of: saved.id).appending(path: "recording.mov"),
+                                                        clicks: savedRecording.clicks ?? [], displaySize: saved.frame.size, deletesFile: false)
         else { return nil }
         var frames: [AnnotationSession.Frame] = []
         for frame in savedRecording.frames {

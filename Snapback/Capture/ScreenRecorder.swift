@@ -11,12 +11,14 @@ struct ScreenRecording {
     let windowRect: CGRect?
     let appName: String
     let windowTitle: String?
+    /// Where and when the mouse was clicked, drawn onto the frames later.
+    var clicks: [Click] = []
 }
 
 struct NotRecording: Error {}
 
 /// Records the front window's display to a temporary movie, with the pointer and without Snapback's own windows,
-/// so the stop pill never shows up in it.
+/// so the stop pill never shows up in it. Clicks are logged rather than recorded, to be drawn onto the frames picked.
 @Observable
 final class ScreenRecorder {
     static let shared = ScreenRecorder()
@@ -35,7 +37,13 @@ final class ScreenRecorder {
         let output: SCRecordingOutput
         let delegate: RecordingDelegate
         let recording: ScreenRecording
+        let clickMonitor: Any?
     }
+
+    /// Clicks so far, timed by system uptime until recording stops, in display points.
+    @ObservationIgnored private var clicks: [Click] = []
+    /// The click each held mouse button made, by button number, until it's let go.
+    @ObservationIgnored private var pressed: [Int: Int] = [:]
 
     /// `beforeCapture` is called with the display's screen just before recording begins, and returns the window
     /// it showed there (the stop pill), which is waited for so Snapback can be left out of the recording.
@@ -55,9 +63,22 @@ final class ScreenRecorder {
         guard let active else { throw NotRecording() }
         self.active = nil
         isRecording = false
+        if let monitor = active.clickMonitor { NSEvent.removeMonitor(monitor) }
         try await active.stream.stopCapture()
         try await active.delegate.finished()
-        return active.recording
+        var recording = active.recording
+        // The movie starts at 0 when the recording output starts.
+        if let start = active.delegate.startUptime {
+            recording.clicks = clicks.compactMap { click in
+                var click = click
+                click.time -= start
+                click.release?.time -= start
+                return click.time >= 0 ? click : nil
+            }
+        }
+        clicks = []
+        pressed = [:]
+        return recording
     }
 
     private func begin(beforeCapture: (NSScreen) -> CGWindowID) async throws {
@@ -114,8 +135,37 @@ final class ScreenRecorder {
             appName: front?.1.localizedName ?? "Screen",
             windowTitle: front.flatMap { $0.0.title?.isEmpty == false ? $0.0.title : nil }
         )
+        clicks = []
+        pressed = [:]
+        // Clicks on Snapback's own windows, like the stop pill, aren't seen here.
+        let displayFrame = display.frame
+        let events: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown, .otherMouseDown, .leftMouseUp, .rightMouseUp, .otherMouseUp]
+        let clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: events) { [weak self] event in
+            self?.log(event, primaryHeight: primaryHeight, displayFrame: displayFrame)
+        }
         try await stream.startCapture()
-        active = Active(stream: stream, output: output, delegate: delegate, recording: recording)
+        active = Active(stream: stream, output: output, delegate: delegate, recording: recording, clickMonitor: clickMonitor)
+    }
+
+    /// Adds a press to the clicks, or the release to the press it ends.
+    private func log(_ event: NSEvent, primaryHeight: CGFloat, displayFrame: CGRect) {
+        // Screen coordinates, bottom-left origin, since a global event has no window.
+        let location = event.locationInWindow
+        let x = location.x - displayFrame.minX, y = primaryHeight - location.y - displayFrame.minY
+        switch event.type {
+        case .leftMouseDown, .rightMouseDown, .otherMouseDown:
+            guard CGRect(origin: .zero, size: displayFrame.size).contains(CGPoint(x: x, y: y)) else { return }
+            let button: Click.Button = switch event.type {
+            case .leftMouseDown: event.modifierFlags.contains(.control) ? .right : .left
+            case .rightMouseDown: .right
+            default: .other
+            }
+            pressed[event.buttonNumber] = clicks.count
+            clicks.append(Click(time: event.timestamp, x: x, y: y, button: button))
+        default:
+            guard let index = pressed.removeValue(forKey: event.buttonNumber) else { return }
+            clicks[index].release = Click.Release(time: event.timestamp, x: x, y: y)
+        }
     }
 
     private func screen(of display: SCDisplay) -> NSScreen {
@@ -130,6 +180,21 @@ nonisolated private final class RecordingDelegate: NSObject, SCRecordingOutputDe
     private let lock = NSLock()
     private var result: Result<Void, Error>?
     private var waiter: CheckedContinuation<Void, Error>?
+    private var started: TimeInterval?
+
+    /// The system uptime when the movie's first frame was taken, the same clock as event timestamps.
+    var startUptime: TimeInterval? {
+        lock.lock()
+        defer { lock.unlock() }
+        return started
+    }
+
+    func recordingOutputDidStartRecording(_ recordingOutput: SCRecordingOutput) {
+        let now = ProcessInfo.processInfo.systemUptime
+        lock.lock()
+        started = now
+        lock.unlock()
+    }
 
     func recordingOutputDidFinishRecording(_ recordingOutput: SCRecordingOutput) {
         finish(.success(()))

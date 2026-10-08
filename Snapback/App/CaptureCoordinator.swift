@@ -96,7 +96,8 @@ final class CaptureCoordinator {
         Task {
             do {
                 let finished = try await ScreenRecorder.shared.stop()
-                let recording = try await Recording.open(finished.url, deletesFile: true)
+                let recording = try await Recording.open(finished.url, clicks: finished.clicks, displaySize: finished.frame.size,
+                                                         deletesFile: true)
                 let time = recording.times[0]
                 let image = try await recording.image(at: time, exact: true).image
                 let display = CapturedWindow(image: image, frame: finished.frame, screen: finished.screen,
