@@ -4,9 +4,11 @@ import SwiftUI
 struct HistoryPosition {
     let index: Int?
     let count: Int
+    /// An unsaved new capture is waiting before the newest saved one.
+    let hasDraft: Bool
 
     var hasOlder: Bool { (index ?? -1) + 1 < count }
-    var hasNewer: Bool { (index ?? 0) > 0 }
+    var hasNewer: Bool { index.map { $0 > 0 || hasDraft } ?? false }
 }
 
 /// History arrows, marker colour and size, and Send, under the screenshot. Closing is done by clicking the background.
