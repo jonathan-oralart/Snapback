@@ -2,7 +2,7 @@ import KeyboardShortcuts
 import SwiftUI
 
 /// Full-screen overlay: the frozen window in place, markers on top, a note popup beside the marker
-/// being edited, and a toolbar under the window.
+/// being edited, and a toolbar under the window. A recording also gets a timeline to pick frames from.
 struct OverlayView: View {
     @Bindable var session: AnnotationSession
     let onSend: () -> Void
@@ -14,10 +14,16 @@ struct OverlayView: View {
 
     @State private var hoveredID: UUID?
     @State private var hoveredCorner: Marker.Corner?
+    @State private var hoveredCrop = false
     @State private var drag: DragMode?
     @State private var isBackdropShown: Bool
     @State private var popupSize = CGSize(width: NoteBubble.width, height: 44)
-    @State private var toolbarSize = CGSize(width: 300, height: 52)
+    /// The timeline and toolbar under the screenshot.
+    @State private var controlsSize = CGSize(width: 300, height: 52)
+    /// Showing the whole recorded screen to choose the crop, instead of annotating.
+    @State private var isCropping = false
+    /// The crop being dragged out, set when the drag ends.
+    @State private var cropDraft: CGRect?
     /// The selected marker's popup is always shown; `.note` means its note is being typed into.
     /// Otherwise the canvas holds focus, so Delete removes the marker and Return edits its note.
     @FocusState private var focus: Focus?
@@ -42,8 +48,12 @@ struct OverlayView: View {
     private enum DragMode {
         case undecided
         case drawing
-        case moving(UUID, original: Marker.Shape, before: [Marker])
-        case resizing(UUID, Marker.Corner, original: CGRect, before: [Marker])
+        case moving(UUID, original: Marker.Shape, before: [AnnotationSession.Frame])
+        case resizing(UUID, Marker.Corner, original: CGRect, before: [AnnotationSession.Frame])
+        /// Drawing a new crop from a point, moving the crop, or dragging a corner with the opposite one fixed.
+        case newCrop(from: CGPoint)
+        case movingCrop(original: CGRect)
+        case resizingCrop(anchor: CGPoint)
     }
 
     var body: some View {
@@ -61,7 +71,7 @@ struct OverlayView: View {
             canvas
                 .offset(x: imageRect.minX, y: imageRect.minY)
 
-            if let id = session.selectedID, let index = session.markers.firstIndex(where: { $0.id == id }) {
+            if !isCropping, let id = session.selectedID, let index = session.markers.firstIndex(where: { $0.id == id }) {
                 let placement = placement(for: session.markers[index].shape, size: popupSize)
                 NoteEditor(note: $session.markers[index].note, focus: $focus)
                     .noteBubble(edge: placement.edge, tailOffset: placement.tailOffset)
@@ -70,10 +80,16 @@ struct OverlayView: View {
                     .offset(placement.offset)
             }
 
-            OverlayToolbar(hasMarkers: !session.markers.isEmpty, style: $session.style, history: historyPosition,
-                           onNavigate: onNavigate, onCopy: onCopy, onSend: onSend)
-                .onGeometryChange(for: CGSize.self, of: \.size) { toolbarSize = $0 }
-                .offset(toolbarOffset)
+            VStack(spacing: 10) {
+                if let recording = session.recording {
+                    RecordingTimeline(session: session, recording: recording, isCropping: $isCropping)
+                        .frame(width: timelineWidth)
+                }
+                OverlayToolbar(hasMarkers: session.hasMarkers, style: $session.style, history: historyPosition,
+                               onNavigate: onNavigate, onCopy: onCopy, onSend: onSend)
+            }
+            .onGeometryChange(for: CGSize.self, of: \.size) { controlsSize = $0 }
+            .offset(controlsOffset)
         }
         .frame(width: screenSize.width, height: screenSize.height, alignment: .topLeading)
         .ignoresSafeArea()
@@ -89,8 +105,8 @@ struct OverlayView: View {
                 Button("", action: { undo(redo: false) }).keyboardShortcut("z")
                 Button("", action: { undo(redo: true) }).keyboardShortcut("z", modifiers: [.command, .shift])
                 Button("", action: discardKey).globalKeyboardShortcut(.discard)
-                Button("", action: { if !session.markers.isEmpty { onSend() } }).globalKeyboardShortcut(.send)
-                Button("", action: copyKey).keyboardShortcut("c")
+                Button("", action: { if session.hasMarkers { onSend() } }).globalKeyboardShortcut(.send)
+                Button("", action: copyKey).globalKeyboardShortcut(.copy)
                 Button("", action: { if historyPosition.hasOlder { onNavigate(1) } }).keyboardShortcut("[")
                 Button("", action: { if historyPosition.hasNewer { onNavigate(-1) } }).keyboardShortcut("]")
             }
@@ -107,7 +123,7 @@ struct OverlayView: View {
         .onKeyPress { press in
             // Backspace arrives as U+007F, which doesn't match SwiftUI's `.delete` (U+0008).
             let isDelete = press.key == .delete || press.key == .deleteForward || press.characters == "\u{7F}"
-            guard isDelete, focus != .note, let id = session.selectedID else { return .ignored }
+            guard isDelete, focus != .note, !isCropping, let id = session.selectedID else { return .ignored }
             session.remove(id)
             focus = .canvas
             return .handled
@@ -120,14 +136,37 @@ struct OverlayView: View {
         .onKeyPress(keys: [.leftArrow, .rightArrow]) { press in
             // ← older, → newer, matching the toolbar's arrows. Arrows move the cursor while typing.
             guard focus != .note else { return .ignored }
+            // A recording steps a frame at a time instead; history is ⌘[ and ⌘].
+            if session.recording != nil {
+                session.step(by: press.key == .leftArrow ? -1 : 1)
+                return .handled
+            }
             let step = press.key == .leftArrow ? 1 : -1
             guard step == 1 ? historyPosition.hasOlder : historyPosition.hasNewer else { return .handled }
             onNavigate(step)
             return .handled
         }
+        .onKeyPress(keys: [.upArrow, .downArrow]) { press in
+            // A recording's previous and next kept frames.
+            guard focus != .note, session.recording != nil else { return .ignored }
+            session.jumpToKeptFrame(by: press.key == .upArrow ? -1 : 1)
+            return .handled
+        }
+        .onKeyPress(.space) {
+            guard focus != .note, session.recording != nil, !isCropping else { return .ignored }
+            session.toggleKeep()
+            return .handled
+        }
         .onKeyPress(.return) {
-            guard focus != .note, session.selectedID != nil else { return .ignored }
-            focus = .note
+            // Return edits the selected marker's note; with nothing selected it copies the image.
+            guard focus != .note else { return .ignored }
+            if isCropping {
+                isCropping = false
+            } else if session.selectedID != nil {
+                focus = .note
+            } else {
+                onCopy()
+            }
             return .handled
         }
     }
@@ -139,15 +178,37 @@ struct OverlayView: View {
         let draft = session.draft
         let style = session.style
         let bounds = session.bounds
-        let size = session.capture.frame.size
+        let firstNumber = session.firstNumber
+        let size = canvasSize
+        let isCropping = isCropping
+        let crop = cropDraft ?? session.crop
+        let zoom = zoom
 
         return ZStack {
-            Image(decorative: session.capture.image, scale: session.capture.pixelScale)
+            // While cropping, the whole screen; otherwise just the cropped part.
+            Image(decorative: isCropping ? session.image : session.capture.image, scale: session.capture.pixelScale)
                 .resizable()
                 .interpolation(.high)
-            Canvas { context, _ in
-                context.withCGContext { cg in
-                    style.paint(markers, within: bounds, selectedID: selectedID, hoveredID: hovered, draft: draft, scale: 1, in: cg)
+            Canvas { context, canvasSize in
+                if isCropping {
+                    // Markers where they'll be, and everything outside the crop dimmed.
+                    context.withCGContext { cg in
+                        cg.translateBy(x: session.crop.minX, y: session.crop.minY)
+                        style.paint(markers, within: bounds, selectedID: nil, draft: nil, scale: 1, firstNumber: firstNumber, in: cg)
+                    }
+                    var outside = Path(CGRect(origin: .zero, size: canvasSize))
+                    outside.addRect(crop)
+                    context.fill(outside, with: .color(.black.opacity(0.55)), style: FillStyle(eoFill: true))
+                    context.stroke(Path(crop), with: .color(.white), lineWidth: 2 / zoom)
+                    for corner in Self.corners(of: crop) {
+                        let handle = 10 / zoom
+                        context.fill(Path(CGRect(x: corner.x - handle / 2, y: corner.y - handle / 2, width: handle, height: handle)), with: .color(.white))
+                    }
+                } else {
+                    context.withCGContext { cg in
+                        style.paint(markers, within: bounds, selectedID: selectedID, hoveredID: hovered, draft: draft, scale: 1,
+                                    firstNumber: firstNumber, in: cg)
+                    }
                 }
             }
         }
@@ -155,7 +216,9 @@ struct OverlayView: View {
         .contentShape(Rectangle())
         .gesture(markerGesture)
         .onContinuousHover { phase in
-            if case .active(let location) = phase {
+            if case .active(let location) = phase, isCropping {
+                hoveredCrop = session.crop.contains(location)
+            } else if case .active(let location) = phase {
                 hoveredCorner = session.resizeHandle(at: location)?.1
                 hoveredID = session.marker(at: location)
             } else {
@@ -190,9 +253,11 @@ struct OverlayView: View {
         }
     }
 
-    /// Esc stops typing, then clears the selection, then closes.
+    /// Esc stops typing, then clears the selection (or leaves cropping), then closes.
     private func escape() {
-        if focus == .note {
+        if isCropping {
+            isCropping = false
+        } else if focus == .note {
             focus = .canvas
         } else if session.selectedID != nil {
             select(nil)
@@ -201,18 +266,18 @@ struct OverlayView: View {
         }
     }
 
-    /// Closes, saving if there are markers, so closing never loses work.
+    /// Closes, saving if there are markers (or frames picked from a recording), so closing never loses work.
     private func finish() {
-        if session.markers.isEmpty {
+        if !session.isWorthSaving {
             onDiscard()
         } else {
             onSave()
         }
     }
 
-    /// ⌘C copies the selected text while typing a note; otherwise it copies the annotated image.
     private func copyKey() {
-        if focus == .note {
+        // ⌘C copies the selected text while typing; it only copies the image outside a note.
+        if focus == .note, KeyboardShortcuts.getShortcut(for: .copy) == .init(.c, modifiers: .command) {
             NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
         } else {
             onCopy()
@@ -231,11 +296,16 @@ struct OverlayView: View {
     // MARK: Pointer
 
     /// Open hand over a marker that can be moved, closed while moving it, crosshair for adding.
+    /// While cropping: open hand inside the crop, crosshair outside to draw a new one.
     private var pointerStyle: PointerStyle {
         switch drag {
-        case .moving: return .grabActive
+        case .moving, .movingCrop: return .grabActive
         case .resizing(_, let corner, _, _): return Self.resizePointer(corner)
+        case .resizingCrop: return .frameResize(position: .bottomTrailing)
         default: break
+        }
+        if isCropping {
+            return hoveredCrop ? .grabIdle : .rectSelection
         }
         if let hoveredCorner { return Self.resizePointer(hoveredCorner) }
         return hoveredID != nil ? .grabIdle : .rectSelection
@@ -252,12 +322,16 @@ struct OverlayView: View {
     private var markerGesture: some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
+                if isCropping {
+                    dragCrop(value)
+                    return
+                }
                 if drag == nil {
                     if let (id, corner, rect) = session.resizeHandle(at: value.startLocation) {
-                        drag = .resizing(id, corner, original: rect, before: session.markers)
+                        drag = .resizing(id, corner, original: rect, before: session.frames)
                     } else if let id = session.marker(at: value.startLocation),
                        let marker = session.markers.first(where: { $0.id == id }) {
-                        drag = .moving(id, original: marker.shape, before: session.markers)
+                        drag = .moving(id, original: marker.shape, before: session.frames)
                         select(id)
                     } else {
                         drag = .undecided
@@ -290,6 +364,9 @@ struct OverlayView: View {
             }
             .onEnded { value in
                 switch drag {
+                case .newCrop, .movingCrop, .resizingCrop:
+                    if let cropDraft { session.setCrop(cropDraft) }
+                    cropDraft = nil
                 case .moving(_, _, let before), .resizing(_, _, _, let before):
                     if hypot(value.translation.width, value.translation.height) >= 3 {
                         session.recordUndo(before)
@@ -312,9 +389,44 @@ struct OverlayView: View {
             }
     }
 
-    /// A new marker opens its note ready for typing.
+    /// Crop dragging: from a corner resizes, from inside moves, from outside draws a new crop.
+    private func dragCrop(_ value: DragGesture.Value) {
+        let screen = session.sourceBounds
+        if drag == nil {
+            let crop = session.crop
+            let reach = 14 / zoom
+            if let corner = Self.corners(of: crop).first(where: { hypot($0.x - value.startLocation.x, $0.y - value.startLocation.y) <= reach }) {
+                drag = .resizingCrop(anchor: CGPoint(x: corner.x == crop.minX ? crop.maxX : crop.minX, y: corner.y == crop.minY ? crop.maxY : crop.minY))
+            } else if crop.contains(value.startLocation) {
+                drag = .movingCrop(original: crop)
+            } else {
+                drag = .newCrop(from: value.startLocation.clamped(to: screen))
+            }
+        }
+        switch drag {
+        case .newCrop(let start), .resizingCrop(let start):
+            let end = value.location.clamped(to: screen)
+            cropDraft = CGRect(x: min(start.x, end.x), y: min(start.y, end.y), width: abs(end.x - start.x), height: abs(end.y - start.y))
+        case .movingCrop(let original):
+            let origins = CGRect(x: 0, y: 0, width: screen.width - original.width, height: screen.height - original.height)
+            let origin = CGPoint(x: original.minX + value.translation.width, y: original.minY + value.translation.height).clamped(to: origins)
+            cropDraft = CGRect(origin: origin, size: original.size)
+        default:
+            break
+        }
+    }
+
+    private static func corners(of rect: CGRect) -> [CGPoint] {
+        [CGPoint(x: rect.minX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.minY),
+         CGPoint(x: rect.minX, y: rect.maxY), CGPoint(x: rect.maxX, y: rect.maxY)]
+    }
+
+    /// A new marker opens its note ready for typing. A recording keeps at most six frames, so a seventh can't be marked.
     private func create(_ shape: Marker.Shape) {
-        session.add(shape)
+        guard session.add(shape) != nil else {
+            NSSound.beep()
+            return
+        }
         // The popup's field appears in this update; focus it once it's in the window.
         DispatchQueue.main.async { focus = .note }
     }
@@ -338,11 +450,16 @@ struct OverlayView: View {
     private static let margin: CGFloat = 32
     private static let toolbarGap: CGFloat = 16
 
+    /// What the canvas shows, in points: the screenshot, or the whole recorded screen while cropping.
+    private var canvasSize: CGSize {
+        isCropping ? session.sourceBounds.size : session.capture.frame.size
+    }
+
     /// The screenshot is shown a little smaller than the real window, so it reads as a capture
-    /// rather than the live app, and smaller still if it's needed to fit the toolbar underneath.
+    /// rather than the live app, and smaller still if it's needed to fit the controls underneath.
     private var zoom: CGFloat {
-        let window = session.capture.frame.size
-        let height = screenSize.height - Self.margin * 2 - Self.toolbarGap - toolbarSize.height
+        let window = canvasSize
+        let height = screenSize.height - Self.margin * 2 - Self.toolbarGap - controlsSize.height
         let width = screenSize.width - Self.margin * 2
         return min(0.9, height / window.height, width / window.width)
     }
@@ -350,9 +467,9 @@ struct OverlayView: View {
     /// Where the screenshot sits within the overlay, top-left origin: centred on the screen
     /// together with the toolbar below it.
     private var imageRect: CGRect {
-        let window = session.capture.frame.size
+        let window = canvasSize
         let size = CGSize(width: window.width * zoom, height: window.height * zoom)
-        let groupHeight = size.height + Self.toolbarGap + toolbarSize.height
+        let groupHeight = size.height + Self.toolbarGap + controlsSize.height
         return CGRect(x: (screenSize.width - size.width) / 2, y: (screenSize.height - groupHeight) / 2, width: size.width, height: size.height)
     }
 
@@ -389,8 +506,13 @@ struct OverlayView: View {
     }
 
     /// Centred just below the screenshot.
-    private var toolbarOffset: CGSize {
-        CGSize(width: (screenSize.width - toolbarSize.width) / 2, height: imageRect.maxY + Self.toolbarGap)
+    private var controlsOffset: CGSize {
+        CGSize(width: (screenSize.width - controlsSize.width) / 2, height: imageRect.maxY + Self.toolbarGap)
+    }
+
+    /// As wide as the screenshot, within reason.
+    private var timelineWidth: CGFloat {
+        min(max(imageRect.width, 640), screenSize.width - Self.margin * 2)
     }
 }
 

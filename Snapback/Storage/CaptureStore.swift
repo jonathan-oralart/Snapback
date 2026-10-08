@@ -1,3 +1,4 @@
+import AVFoundation
 import AppKit
 import Observation
 
@@ -7,11 +8,14 @@ struct SavedCapture: Identifiable, Codable {
     var date: Date
     let appName: String
     let windowTitle: String?
-    /// Where the window was on screen, top-left origin.
+    /// Where the window (or the recorded display) was on screen, top-left origin.
     let frame: CGRect
+    /// A screenshot's markers. Empty for a recording, whose markers are on its frames.
     var markers: [Marker]
     /// Missing from captures saved before marker styles existed.
     var style: MarkerStyle?
+    /// Only for a screen recording.
+    var recording: SavedRecording?
 
     var displayDate: String {
         Calendar.current.isDateInToday(date)
@@ -20,8 +24,44 @@ struct SavedCapture: Identifiable, Codable {
     }
 }
 
+/// The frames picked from a screen recording, and how they're cropped.
+struct SavedRecording: Codable {
+    /// In display points.
+    var crop: CGRect
+    var frames: [SavedFrame]
+}
+
+/// Saved as `{timeValue, timescale, markers}`: the time exactly as the movie has it, so the same frame comes back.
+struct SavedFrame: Codable {
+    /// The frame's time in `recording.mov`.
+    var time: CMTime
+    var markers: [Marker]
+
+    private enum CodingKeys: String, CodingKey { case timeValue, timescale, markers }
+
+    init(time: CMTime, markers: [Marker]) {
+        self.time = time
+        self.markers = markers
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        time = CMTime(value: try container.decode(CMTimeValue.self, forKey: .timeValue),
+                      timescale: try container.decode(CMTimeScale.self, forKey: .timescale))
+        markers = try container.decode([Marker].self, forKey: .markers)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(time.value, forKey: .timeValue)
+        try container.encode(time.timescale, forKey: .timescale)
+        try container.encode(markers, forKey: .markers)
+    }
+}
+
 /// Keeps the most recent sent captures in Application Support, one folder each:
-/// `window.png` (unannotated), `capture.json` (markers and notes), `thumbnail.png` (the sent image, small).
+/// `window.png` (unannotated) or `recording.mov` (a screen recording), `capture.json` (markers and notes),
+/// `thumbnail.png` (the sent image, small).
 @Observable
 final class CaptureStore {
     static let shared = CaptureStore()
@@ -46,7 +86,7 @@ final class CaptureStore {
     func save(_ session: AnnotationSession, png: Data) {
         let id = session.savedID ?? UUID()
         session.savedID = id
-        let capture = session.capture
+        let capture = session.source
         let saved = SavedCapture(
             id: id,
             // Re-saving keeps the original date, so history order doesn't shift while browsing it.
@@ -54,15 +94,26 @@ final class CaptureStore {
             appName: capture.appName,
             windowTitle: capture.windowTitle,
             frame: capture.frame,
-            markers: session.markers,
-            style: session.style
+            markers: session.recording == nil ? session.frames[0].markers : [],
+            style: session.style,
+            recording: session.recording.map { _ in
+                SavedRecording(crop: session.crop, frames: session.frames.map { SavedFrame(time: $0.time!, markers: $0.markers) })
+            }
         )
 
         let directory = folder(of: id)
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let windowFile = directory.appending(path: "window.png")
-        if !FileManager.default.fileExists(atPath: windowFile.path()) {
-            try? Self.png(capture.image)?.write(to: windowFile)
+        if let recording = session.recording {
+            // A copy, which on APFS is instant and takes no space; the temporary file goes once the overlay is done with it.
+            let movie = directory.appending(path: "recording.mov")
+            if !FileManager.default.fileExists(atPath: movie.path()) {
+                try? FileManager.default.copyItem(at: recording.url, to: movie)
+            }
+        } else {
+            let windowFile = directory.appending(path: "window.png")
+            if !FileManager.default.fileExists(atPath: windowFile.path()) {
+                try? Self.png(capture.image)?.write(to: windowFile)
+            }
         }
         let thumbnail = Self.thumbnail(fromPNG: png)
         if let thumbnail {
@@ -83,7 +134,10 @@ final class CaptureStore {
     }
 
     /// The saved capture ready to annotate again, placed where the window was if that's still on screen, otherwise centred.
-    func restore(_ saved: SavedCapture) -> AnnotationSession? {
+    func restore(_ saved: SavedCapture) async -> AnnotationSession? {
+        if let recording = saved.recording {
+            return await restore(saved, recording: recording)
+        }
         guard let image = decodedImages[saved.id] ?? Self.decode(windowFile(of: saved.id)),
               let screen = NSScreen.main
         else { return nil }
@@ -98,11 +152,35 @@ final class CaptureStore {
         return AnnotationSession(capture: capture, markers: saved.markers, savedID: saved.id, style: saved.style ?? .lastUsed)
     }
 
+    /// A recording, with its kept frames decoded again from the movie.
+    private func restore(_ saved: SavedCapture, recording savedRecording: SavedRecording) async -> AnnotationSession? {
+        guard let screen = NSScreen.main,
+              let recording = try? await Recording.open(folder(of: saved.id).appending(path: "recording.mov"), deletesFile: false)
+        else { return nil }
+        var frames: [AnnotationSession.Frame] = []
+        for frame in savedRecording.frames {
+            guard let image = try? await recording.image(at: frame.time, exact: true).image else { return nil }
+            frames.append(AnnotationSession.Frame(time: frame.time, image: image, markers: frame.markers))
+        }
+        let time = frames.first?.time ?? recording.times[0]
+        let image: CGImage
+        if let first = frames.first {
+            image = first.image
+        } else {
+            guard let shown = try? await recording.image(at: time, exact: true).image else { return nil }
+            image = shown
+        }
+        let display = CapturedWindow(image: image, frame: saved.frame, screen: screen, appName: saved.appName, windowTitle: saved.windowTitle)
+        return AnnotationSession(recording: recording, display: display, crop: savedRecording.crop, frames: frames, time: time,
+                                 savedID: saved.id, style: saved.style ?? .lastUsed)
+    }
+
     /// Decodes the screenshots either side of `id` (or the newest, for an unsaved capture) in the
     /// background, and forgets ones further away.
     func prefetchNeighbours(of id: UUID?) {
         let index = id.flatMap { id in captures.firstIndex { $0.id == id } } ?? -1
-        let nearby = [index - 1, index, index + 1].filter(captures.indices.contains).map { captures[$0].id }
+        let nearby = [index - 1, index, index + 1].filter(captures.indices.contains).map { captures[$0] }
+            .filter { $0.recording == nil }.map(\.id)
         decodedImages = decodedImages.filter { nearby.contains($0.key) }
         for neighbour in nearby where decodedImages[neighbour] == nil {
             let url = windowFile(of: neighbour)

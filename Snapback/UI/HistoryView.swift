@@ -60,7 +60,7 @@ private struct CaptureCard: View {
             Text(saved.windowTitle ?? saved.appName)
                 .font(.headline)
                 .lineLimit(1)
-            Text("\(saved.appName) · \(saved.displayDate)")
+            Text("\(saved.recording == nil ? "" : "Recording · ")\(saved.appName) · \(saved.displayDate)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)

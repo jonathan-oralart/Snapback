@@ -1,4 +1,4 @@
-# Snapback
+# Snapback: screenshot annotation for Claude Code
 
 Point at what's wrong, say why, send it to Claude.
 
@@ -10,7 +10,7 @@ Download the latest `Snapback-x.y.z.dmg` from [Releases](https://github.com/jona
 
 Requires macOS 26.4 and the [Claude desktop app](https://claude.ai/download). On first launch Snapback asks for:
 
-- **Screen Recording**, to capture the front window.
+- **Screen Recording**, to capture the front window or record the screen.
 - **Accessibility**, to paste the screenshot into Claude.
 
 ## Use
@@ -18,6 +18,7 @@ Requires macOS 26.4 and the [Claude desktop app](https://claude.ai/download). On
 | | |
 | --- | --- |
 | Capture the front window | ⌃⌥⌘C (change it in Settings) |
+| Record the screen / stop | ⌃⌥⌘R (change it in Settings) |
 | Drop a pin / draw a box | Click / drag |
 | Move or resize | Drag a marker, or a box's corner handles |
 | Marker size | − and + |
@@ -28,9 +29,11 @@ Requires macOS 26.4 and the [Claude desktop app](https://claude.ai/download). On
 | Close and save | Esc, or click outside the screenshot |
 | Close without saving | ⌘⌫ |
 
-The last 20 captures are kept under **Recent** in the menu bar icon.
+For states that only last while you hold a key or the mouse, record instead: press ⌃⌥⌘R, do it, then stop with ⌃⌥⌘R or the floating stop button. The recording opens with a timeline; drag along it or step with ← →, and keep up to six frames with Space (adding a marker keeps its frame too). Crop narrows every frame to the part that matters. Kept frames are sent as one image, in a grid, with markers numbered across them.
 
-The send sound (pick one or turn it off in Settings) is from [SND](https://snd.dev)'s SND01 "sine" kit by Yasuhiro Tsuchiya.
+The last 20 captures are kept under **Recent** in the menu bar icon, recordings with their video.
+
+The send and copy sound (pick one or turn it off in Settings) is from [SND](https://snd.dev)'s SND01 "sine" kit by Yasuhiro Tsuchiya.
 
 ## Build
 

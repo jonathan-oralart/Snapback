@@ -70,7 +70,9 @@ struct MarkerStyle: Codable, Equatable {
 
     /// Paints into a top-left-origin context where one window point is `scale` units.
     /// `hoveredID` gives the marker under the pointer a slight lift; exports leave it out.
-    func paint(_ markers: [Marker], within bounds: CGRect, selectedID: UUID?, hoveredID: UUID? = nil, draft: CGRect?, scale: CGFloat, in cg: CGContext) {
+    /// Numbers start at `firstNumber`, since a recording numbers markers across its frames.
+    func paint(_ markers: [Marker], within bounds: CGRect, selectedID: UUID?, hoveredID: UUID? = nil, draft: CGRect?, scale: CGFloat,
+               firstNumber: Int = 1, in cg: CGContext) {
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = NSGraphicsContext(cgContext: cg, flipped: true)
         defer { NSGraphicsContext.restoreGraphicsState() }
@@ -80,12 +82,12 @@ struct MarkerStyle: Codable, Equatable {
             if case .box(let rect) = marker.shape {
                 let selected = marker.id == selectedID, hovered = marker.id == hoveredID
                 paintBox(rect.scaled(scale), scale: scale, selected: selected, hovered: hovered)
-                paintBadge(index + 1, at: badgeCenter(of: marker.shape, within: bounds).scaled(scale), scale: scale, selected: selected, hovered: hovered)
+                paintBadge(firstNumber + index, at: badgeCenter(of: marker.shape, within: bounds).scaled(scale), scale: scale, selected: selected, hovered: hovered)
             }
         }
         for (index, marker) in markers.enumerated() {
             if case .pin = marker.shape {
-                paintBadge(index + 1, at: badgeCenter(of: marker.shape, within: bounds).scaled(scale), scale: scale, selected: marker.id == selectedID, hovered: marker.id == hoveredID)
+                paintBadge(firstNumber + index, at: badgeCenter(of: marker.shape, within: bounds).scaled(scale), scale: scale, selected: marker.id == selectedID, hovered: marker.id == hoveredID)
             }
         }
         if let draft {

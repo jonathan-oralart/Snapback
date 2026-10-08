@@ -25,8 +25,8 @@ The Xcode project is generated from `project.yml` with XcodeGen; edit that and r
 ## Architecture
 
 - `App`: entry point and menu, shortcut, permissions window, `AppWindows` (open windows through it so they come to the front), and `CaptureCoordinator` (capture → overlay → save/send).
-- `Capture`: front window capture with ScreenCaptureKit.
-- `Overlay`: `Marker` and `AnnotationSession` (selection, undo), `MarkerStyle` (marker drawing, shared with the image), the overlay view, note bubble, toolbar and panel.
-- `Output`: `FeedbackImage` renders the PNG that's sent: shadowed window with markers, notes in a card underneath.
-- `Send`: opens `claude://code/new`, then pastes the image with a synthetic ⌘V and plays the send sound chosen in Settings. The sounds are SND01 "sine" from snd.dev; keep the files unmodified (their terms).
-- `Storage`: the last 20 sent or saved captures in `~/Library/Application Support/Snapback/Captures`, reopened from the menu's Recent submenu or the history window (`UI`). `capture.json` stores markers as `{kind, rect, note}`; keep that format readable.
+- `Capture`: front window capture with ScreenCaptureKit, and `ScreenRecorder`, which records the front window's display to a temporary HEVC movie (pointer shown, Snapback's own windows such as the stop pill left out, 60s limit).
+- `Overlay`: `Marker` and `AnnotationSession` (frames, crop, selection, undo), `MarkerStyle` (marker drawing, shared with the image), the overlay view, note bubble, toolbar and panel. A screenshot is one frame; a recording (`Recording`: frame times and exact frame decoding) has up to six kept frames, picked on `RecordingTimeline`, with markers numbered across them.
+- `Output`: `FeedbackImage` renders the PNG that's sent: shadowed window (or a recording's frames in a grid) with markers, notes in a card underneath.
+- `Send`: opens `claude://code/new`, then pastes the image with a synthetic ⌘V and plays the sound chosen in Settings (Copy plays it too). The sounds are SND01 "sine" from snd.dev; keep the files unmodified (their terms).
+- `Storage`: the last 20 sent or saved captures in `~/Library/Application Support/Snapback/Captures`, reopened from the menu's Recent submenu or the history window (`UI`). `capture.json` stores markers as `{kind, rect, note}`; keep that format readable. A recording keeps `recording.mov` instead of `window.png`, and its crop and frames (exact movie times) in `capture.json`.

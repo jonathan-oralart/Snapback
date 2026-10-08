@@ -19,7 +19,7 @@ enum Permission: CaseIterable, Identifiable {
 
     var purpose: String {
         switch self {
-        case .screenRecording: "Captures the front window."
+        case .screenRecording: "Captures the front window, and records the screen."
         case .accessibility: "Pastes the screenshot into Claude."
         }
     }

@@ -31,7 +31,7 @@ struct OverlayToolbar: View {
                 Label("Copy", systemImage: "doc.on.doc")
             }
             .buttonStyle(CapsuleButtonStyle())
-            .help("Copy the annotated image (⌘C)")
+            .help("Copy the annotated image")
             Button(action: onSend) {
                 Label("Claude", systemImage: "paperplane.fill")
             }
@@ -146,7 +146,7 @@ private struct StyleControls: View {
 }
 
 /// A capsule button that lightens on hover and darkens when pressed. The prominent one is accent-coloured.
-private struct CapsuleButtonStyle: ButtonStyle {
+struct CapsuleButtonStyle: ButtonStyle {
     var isProminent = false
 
     func makeBody(configuration: Configuration) -> some View {
@@ -184,7 +184,7 @@ private struct CapsuleButtonStyle: ButtonStyle {
     }
 }
 
-private extension View {
+extension View {
     /// A faint backdrop in `shape` while the pointer is over the view.
     func hoverHighlight(in shape: some Shape) -> some View {
         modifier(HoverHighlight(shape: AnyShape(shape)))

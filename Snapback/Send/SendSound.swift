@@ -1,11 +1,9 @@
 import AppKit
 
-/// The sound played when a capture lands in Claude: SND01 "sine" by Yasuhiro Tsuchiya (https://snd.dev), used unmodified.
+/// The sound played when a capture lands in Claude or on the clipboard: SND01 "sine" by Yasuhiro Tsuchiya (https://snd.dev), used unmodified.
 enum SendSound: String, CaseIterable, Identifiable {
     case off
     case button
-    case tap1 = "tap_01"
-    case tap2 = "tap_02"
     case tap3 = "tap_03"
     case tap4 = "tap_04"
     case tap5 = "tap_05"
@@ -18,8 +16,6 @@ enum SendSound: String, CaseIterable, Identifiable {
         switch self {
         case .off: "None"
         case .button: "Button"
-        case .tap1: "Tap 1"
-        case .tap2: "Tap 2"
         case .tap3: "Tap 3"
         case .tap4: "Tap 4"
         case .tap5: "Tap 5"
@@ -30,13 +26,26 @@ enum SendSound: String, CaseIterable, Identifiable {
         UserDefaults.standard.string(forKey: defaultsKey).flatMap(SendSound.init) ?? .button
     }
 
-    /// Kept so the sound isn't released while it's playing.
+    /// Read from disk once and kept in memory, so playing starts straight away.
+    private static var loaded: [SendSound: NSSound] = [:]
     private static var playing: NSSound?
 
+    /// Loads the sound ahead of time, e.g. when the overlay opens.
+    func preload() {
+        _ = sound
+    }
+
     func play() {
-        guard self != .off, let url = Bundle.main.url(forResource: rawValue, withExtension: "wav") else { return }
         Self.playing?.stop()
-        Self.playing = NSSound(contentsOf: url, byReference: true)
+        Self.playing = sound
         Self.playing?.play()
+    }
+
+    private var sound: NSSound? {
+        if let sound = Self.loaded[self] { return sound }
+        guard self != .off, let url = Bundle.main.url(forResource: rawValue, withExtension: "wav") else { return nil }
+        let sound = NSSound(contentsOf: url, byReference: false)
+        Self.loaded[self] = sound
+        return sound
     }
 }

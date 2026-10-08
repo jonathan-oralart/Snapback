@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// A note in a speech-bubble shape whose tail points at its marker.
+/// A note in a speech-bubble shape whose tail points at its marker. It's a solid card with a shadow,
+/// so it stands out from busy windows.
 struct NoteBubble: ViewModifier {
     static let width: CGFloat = 280
 
@@ -10,13 +11,18 @@ struct NoteBubble: ViewModifier {
     let tailOffset: CGFloat
 
     func body(content: Content) -> some View {
+        let shape = CalloutShape(edge: edge, tailOffset: tailOffset)
         content
             .font(.body)
             .padding(.horizontal, 8)
             .padding(.vertical, 9)
             .padding(Edge.Set(edge), CalloutShape.tailLength)
             .frame(width: Self.width)
-            .glassEffect(.regular, in: CalloutShape(edge: edge, tailOffset: tailOffset))
+            .background(.ultraThickMaterial, in: shape)
+            .overlay { shape.stroke(.primary.opacity(0.15), lineWidth: 0.5) }
+            .compositingGroup()
+            .shadow(color: .black.opacity(0.35), radius: 14, y: 8)
+            .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
     }
 }
 

@@ -9,7 +9,8 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section {
-                KeyboardShortcuts.Recorder("Capture front window", name: .capture)
+                KeyboardShortcuts.Recorder("Capture front window", name: .capture, onChange: KeyboardShortcuts.Name.capture.takeShortcut)
+                KeyboardShortcuts.Recorder("Record screen", name: .record, onChange: KeyboardShortcuts.Name.record.takeShortcut)
                 Toggle("Open at login", isOn: $opensAtLogin)
                     .onChange(of: opensAtLogin) { _, enabled in
                         do {
@@ -23,7 +24,7 @@ struct SettingsView: View {
                             opensAtLogin = SMAppService.mainApp.status == .enabled
                         }
                     }
-                Picker("Sound when sent to Claude", selection: $sendSound) {
+                Picker("Sound when sent or copied", selection: $sendSound) {
                     ForEach(SendSound.allCases) { sound in
                         Text(sound.title).tag(sound)
                     }
@@ -32,12 +33,12 @@ struct SettingsView: View {
             }
 
             Section {
-                KeyboardShortcuts.Recorder("Send to Claude", name: .send)
-                FixedShortcut("Copy image", keys: "⌘C")
-                KeyboardShortcuts.Recorder("Close without saving", name: .discard)
+                KeyboardShortcuts.Recorder("Send to Claude", name: .send, onChange: KeyboardShortcuts.Name.send.takeShortcut)
+                KeyboardShortcuts.Recorder("Copy image", name: .copy, onChange: KeyboardShortcuts.Name.copy.takeShortcut)
+                KeyboardShortcuts.Recorder("Close without saving", name: .discard, onChange: KeyboardShortcuts.Name.discard.takeShortcut)
                 FixedShortcut("Marker size", keys: "−  +")
                 FixedShortcut("Delete selected marker", keys: "⌫")
-                FixedShortcut("Edit selected note", keys: "↩")
+                FixedShortcut("Edit selected note, or copy image", keys: "↩")
                 FixedShortcut("Undo / Redo", keys: "⌘Z  ⇧⌘Z")
                 FixedShortcut("Older / Newer capture", keys: "← →  or  ⌘[ ⌘]")
                 FixedShortcut("Leave note, deselect, close and save", keys: "esc")
@@ -45,6 +46,17 @@ struct SettingsView: View {
                 Text("While annotating")
             } footer: {
                 Text("Clicking outside the screenshot also closes and saves.")
+            }
+
+            Section {
+                FixedShortcut("Previous / Next frame", keys: "← →")
+                FixedShortcut("Keep or remove this frame", keys: "space")
+                FixedShortcut("Previous / Next kept frame", keys: "↑ ↓")
+                FixedShortcut("Older / Newer capture", keys: "⌘[ ⌘]")
+            } header: {
+                Text("While picking frames from a recording")
+            } footer: {
+                Text("Up to \(AnnotationSession.maxFrames) frames can be kept. Adding a marker keeps its frame. Recordings stop after a minute.")
             }
         }
         .formStyle(.grouped)

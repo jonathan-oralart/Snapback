@@ -19,14 +19,8 @@ struct NoFrontWindow: Error {}
 enum WindowCapture {
     /// Captures the front window of the frontmost app, without its shadow or the cursor.
     static func captureFrontWindow() async throws -> CapturedWindow {
-        guard let app = NSWorkspace.shared.frontmostApplication,
-              let windowID = frontWindowID(of: app.processIdentifier)
-        else { throw NoFrontWindow() }
-
         let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
-        guard let window = content.windows.first(where: { $0.windowID == windowID }) else {
-            throw NoFrontWindow()
-        }
+        guard let (window, app) = frontWindow(in: content) else { throw NoFrontWindow() }
 
         let filter = SCContentFilter(desktopIndependentWindow: window)
         let config = SCStreamConfiguration()
@@ -47,6 +41,15 @@ enum WindowCapture {
         )
     }
 
+    /// The frontmost app's front window, as ScreenCaptureKit sees it.
+    static func frontWindow(in content: SCShareableContent) -> (SCWindow, NSRunningApplication)? {
+        guard let app = NSWorkspace.shared.frontmostApplication,
+              let windowID = frontWindowID(of: app.processIdentifier),
+              let window = content.windows.first(where: { $0.windowID == windowID })
+        else { return nil }
+        return (window, app)
+    }
+
     /// The app's frontmost normal window, from the window server's front-to-back list.
     private static func frontWindowID(of pid: pid_t) -> CGWindowID? {
         let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
@@ -65,7 +68,7 @@ enum WindowCapture {
         return nil
     }
 
-    private static func screen(containing frame: CGRect) -> NSScreen {
+    static func screen(containing frame: CGRect) -> NSScreen {
         let center = CGPoint(x: frame.midX, y: frame.midY)
         return NSScreen.screens.first { $0.topLeftFrame.contains(center) } ?? NSScreen.main ?? NSScreen.screens[0]
     }

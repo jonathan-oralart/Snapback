@@ -12,6 +12,9 @@ struct SnapbackApp: App {
         KeyboardShortcuts.onKeyDown(for: .capture) {
             CaptureCoordinator.shared.start()
         }
+        KeyboardShortcuts.onKeyDown(for: .record) {
+            CaptureCoordinator.shared.toggleRecording()
+        }
     }
 
     var body: some Scene {
@@ -42,6 +45,10 @@ private struct MenuContent: View {
             CaptureCoordinator.shared.start()
         }
         .globalKeyboardShortcut(.capture)
+        Button(ScreenRecorder.shared.isRecording ? "Stop Recording" : "Record Screen") {
+            CaptureCoordinator.shared.toggleRecording()
+        }
+        .globalKeyboardShortcut(.record)
         Menu("Recent") {
             ForEach(store.captures) { saved in
                 Button {

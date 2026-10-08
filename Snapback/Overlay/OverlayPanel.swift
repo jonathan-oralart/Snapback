@@ -31,7 +31,7 @@ final class OverlayPanel: NSPanel {
     override var canBecomeMain: Bool { true }
 }
 
-/// The first click annotates instead of only focusing the overlay.
-private final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
+/// The first click acts (annotates, or presses a button) instead of only focusing the window.
+final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }

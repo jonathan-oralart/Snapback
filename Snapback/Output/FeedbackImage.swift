@@ -1,32 +1,56 @@
 import AppKit
 
-/// The annotated screenshot: the window with markers, and the numbered notes in a card underneath.
-/// Everything travels in the one image, so it works wherever an image can be pasted.
+/// The annotated screenshot: the window (or a recording's kept frames, in a grid) with markers, and the numbered
+/// notes in a card underneath. Everything travels in the one image, so it works wherever an image can be pasted.
 enum FeedbackImage {
-    /// Like a macOS window screenshot: the window floats on transparent padding with a soft shadow.
+    /// Like a macOS window screenshot: each frame floats on transparent padding with a soft shadow.
     /// The notes sit in a white card underneath, so they stay readable on any background. With no markers there's no card.
     static func png(for session: AnnotationSession) -> Data {
-        let capture = session.capture
+        let frames = session.framesToSend
         let style = session.style
         // Legend badges keep the full size so their numbers stay readable next to the notes.
         let legendStyle = MarkerStyle(tint: style.tint)
-        let scale = capture.pixelScale
-        let windowWidth = CGFloat(capture.image.width)
-        let windowHeight = CGFloat(capture.image.height)
+        // Several frames are drawn at one pixel per point: the image is already large, and gets scaled down to be read.
+        let scale = frames.count > 1 ? 1 : session.capture.pixelScale
+        let crop = session.crop
+        let sourceScale = session.source.pixelScale
+        let tileWidth = (crop.width * scale).rounded()
+        let tileHeight = (crop.height * scale).rounded()
 
         let margin = 48 * scale
+        let gap = 28 * scale
         let cardGap = 20 * scale
         let padding = 16 * scale
         let badgeSize = legendStyle.pinRadius * 2 * scale
-        let noteX = padding + badgeSize + 10 * scale
         let rowSpacing = 10 * scale
 
-        let explanation = "\(style.tint.name) numbered pins and boxes are feedback markers, not part of the app."
+        // As square as possible, so the frames stay large when the image is scaled to fit.
+        let columns = (1...frames.count).min { a, b in
+            squareness(columns: a, count: frames.count, tile: CGSize(width: tileWidth, height: tileHeight))
+                < squareness(columns: b, count: frames.count, tile: CGSize(width: tileWidth, height: tileHeight))
+        } ?? 1
+        let rows = (frames.count + columns - 1) / columns
+
+        let labels: [NSAttributedString] = frames.count <= 1 ? [] : frames.enumerated().map { index, frame in
+            let seconds = frame.time.map { session.recording?.seconds($0) ?? 0 } ?? 0
+            return NSAttributedString(string: "Frame \(index + 1) · \(String(format: "%.2f", seconds))s", attributes: [
+                .font: NSFont.systemFont(ofSize: 14 * scale, weight: .semibold),
+                .foregroundColor: NSColor(white: 0.15, alpha: 1),
+            ])
+        }
+        let labelHeight = labels.isEmpty ? 0 : height(of: labels[0], width: tileWidth) + 8 * scale
+        let gridWidth = CGFloat(columns) * tileWidth + CGFloat(columns - 1) * gap
+        let gridHeight = CGFloat(rows) * (labelHeight + tileHeight) + CGFloat(rows - 1) * gap
+
+        var explanation = "\(style.tint.name) numbered pins and boxes are feedback markers, not part of the app."
+        if frames.count > 1 {
+            explanation = "Frames 1–\(frames.count) are stills from one screen recording, in time order. " + explanation
+        }
         let header = NSAttributedString(string: explanation, attributes: [
             .font: NSFont.systemFont(ofSize: 13 * scale, weight: .medium),
             .foregroundColor: NSColor(white: 0.4, alpha: 1),
         ])
-        let notes = session.markers.map { marker in
+        let notes = frames.flatMap(\.markers).map { marker in
             let text = marker.note.trimmingCharacters(in: .whitespacesAndNewlines)
             return NSAttributedString(string: text.isEmpty ? "(no note)" : text, attributes: [
                 .font: NSFont.systemFont(ofSize: 15 * scale),
@@ -34,14 +58,15 @@ enum FeedbackImage {
             ])
         }
 
-        let headerHeight = height(of: header, width: windowWidth - padding * 2)
-        let noteHeights = notes.map { max(height(of: $0, width: windowWidth - noteX - padding), badgeSize) }
+        let noteX = padding + badgeSize + 10 * scale
+        let headerHeight = height(of: header, width: gridWidth - padding * 2)
+        let noteHeights = notes.map { max(height(of: $0, width: gridWidth - noteX - padding), badgeSize) }
         let cardHeight = (padding + headerHeight + 14 * scale
             + noteHeights.reduce(0, +) + rowSpacing * CGFloat(max(notes.count - 1, 0)) + padding).rounded(.up)
 
-        let pixelWidth = Int(windowWidth + margin * 2)
+        let pixelWidth = Int(gridWidth + margin * 2)
         let hasCard = !notes.isEmpty
-        let pixelHeight = Int((margin + windowHeight + (hasCard ? cardGap + cardHeight : 0) + margin).rounded(.up))
+        let pixelHeight = Int((margin + gridHeight + (hasCard ? cardGap + cardHeight : 0) + margin).rounded(.up))
         let total = CGFloat(pixelHeight)
 
         guard let cg = CGContext(
@@ -49,39 +74,67 @@ enum FeedbackImage {
             space: CGColorSpace(name: CGColorSpace.sRGB)!,
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         ) else { return Data() }
+        cg.interpolationQuality = CGInterpolationQuality.high
 
-        // Window and card with shadows, in Core Graphics' native bottom-left space.
-        let windowRect = CGRect(x: margin, y: total - margin - windowHeight, width: windowWidth, height: windowHeight)
-        let cardRect = CGRect(x: margin, y: windowRect.minY - cardGap - cardHeight, width: windowWidth, height: cardHeight)
+        /// Where each frame goes, top-left origin.
+        let tiles = frames.indices.map { index in
+            CGRect(
+                x: margin + CGFloat(index % columns) * (tileWidth + gap),
+                y: margin + CGFloat(index / columns) * (labelHeight + tileHeight + gap) + labelHeight,
+                width: tileWidth, height: tileHeight
+            )
+        }
+        let cardRect = CGRect(x: margin, y: margin + gridHeight + cardGap, width: gridWidth, height: cardHeight)
+
+        // Frames and card with shadows, in Core Graphics' native bottom-left space.
+        let flipped = { (rect: CGRect) in CGRect(x: rect.minX, y: total - rect.maxY, width: rect.width, height: rect.height) }
+        let cropPixels = CGRect(x: crop.minX * sourceScale, y: crop.minY * sourceScale,
+                                width: crop.width * sourceScale, height: crop.height * sourceScale).integral
         cg.saveGState()
         cg.setShadow(offset: CGSize(width: 0, height: -12 * scale), blur: 36 * scale, color: NSColor.black.withAlphaComponent(0.4).cgColor)
-        cg.draw(capture.image, in: windowRect)
+        for (frame, tile) in zip(frames, tiles) {
+            cg.draw(frame.image.cropping(to: cropPixels) ?? frame.image, in: flipped(tile))
+        }
         if hasCard {
             cg.setShadow(offset: CGSize(width: 0, height: -4 * scale), blur: 16 * scale, color: NSColor.black.withAlphaComponent(0.25).cgColor)
-            cg.addPath(CGPath(roundedRect: cardRect, cornerWidth: 12 * scale, cornerHeight: 12 * scale, transform: nil))
+            cg.addPath(CGPath(roundedRect: flipped(cardRect), cornerWidth: 12 * scale, cornerHeight: 12 * scale, transform: nil))
             cg.setFillColor(NSColor.white.cgColor)
             cg.fillPath()
         }
         cg.restoreGState()
 
-        // Markers and notes top-left-origin, like the overlay.
+        // Labels, markers and notes top-left-origin, like the overlay.
         cg.translateBy(x: 0, y: total)
         cg.scaleBy(x: 1, y: -1)
-        cg.translateBy(x: margin, y: margin)
-        style.paint(session.markers, within: session.bounds, selectedID: nil, draft: nil, scale: scale, in: cg)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: cg, flipped: true)
+        for (label, tile) in zip(labels, tiles) {
+            label.draw(with: CGRect(x: tile.minX, y: tile.minY - labelHeight, width: tile.width, height: labelHeight), options: drawingOptions)
+        }
+        NSGraphicsContext.restoreGraphicsState()
+
+        var number = 1
+        for (frame, tile) in zip(frames, tiles) {
+            cg.saveGState()
+            cg.clip(to: tile)
+            cg.translateBy(x: tile.minX, y: tile.minY)
+            style.paint(frame.markers, within: session.bounds, selectedID: nil, draft: nil, scale: scale, firstNumber: number, in: cg)
+            cg.restoreGState()
+            number += frame.markers.count
+        }
 
         if hasCard {
             NSGraphicsContext.saveGraphicsState()
             NSGraphicsContext.current = NSGraphicsContext(cgContext: cg, flipped: true)
-            var y = windowHeight + cardGap + padding
-            header.draw(with: CGRect(x: padding, y: y, width: windowWidth - padding * 2, height: headerHeight), options: drawingOptions)
+            var y = cardRect.minY + padding
+            header.draw(with: CGRect(x: cardRect.minX + padding, y: y, width: gridWidth - padding * 2, height: headerHeight), options: drawingOptions)
             y += headerHeight + 14 * scale
 
             for (index, note) in notes.enumerated() {
                 let lineHeight = (note.attribute(.font, at: 0, effectiveRange: nil) as? NSFont).map { NSLayoutManager().defaultLineHeight(for: $0) } ?? badgeSize
-                legendStyle.paintBadge(index + 1, at: CGPoint(x: padding + badgeSize / 2, y: y + max(lineHeight, badgeSize) / 2), scale: scale, selected: false)
+                legendStyle.paintBadge(index + 1, at: CGPoint(x: cardRect.minX + padding + badgeSize / 2, y: y + max(lineHeight, badgeSize) / 2), scale: scale, selected: false)
                 let textY = y + max(0, (badgeSize - lineHeight) / 2)
-                note.draw(with: CGRect(x: noteX, y: textY, width: windowWidth - noteX - padding, height: noteHeights[index]), options: drawingOptions)
+                note.draw(with: CGRect(x: cardRect.minX + noteX, y: textY, width: gridWidth - noteX - padding, height: noteHeights[index]), options: drawingOptions)
                 y += noteHeights[index] + rowSpacing
             }
             NSGraphicsContext.restoreGraphicsState()
@@ -89,6 +142,12 @@ enum FeedbackImage {
 
         guard let image = cg.makeImage() else { return Data() }
         return NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:]) ?? Data()
+    }
+
+    /// How far a grid of `count` tiles is from square; 0 is square.
+    private static func squareness(columns: Int, count: Int, tile: CGSize) -> CGFloat {
+        let rows = (count + columns - 1) / columns
+        return abs(log((CGFloat(columns) * tile.width) / (CGFloat(rows) * tile.height)))
     }
 
     private static let drawingOptions: NSString.DrawingOptions = [.usesLineFragmentOrigin, .usesFontLeading]
