@@ -3,8 +3,8 @@ import AppKit
 
 /// Debug builds only: plays a scripted take for recording the README demo (`scripts/record-demo.sh`).
 /// It first lays out Claude and the demo page side by side; then the take has its markers added to a
-/// capture of the page through the real annotation session. The operator clicks Send to Claude,
-/// then submits after verifying the attachment.
+/// capture of the page through the real annotation session. The operator clicks Copy & Open Claude,
+/// pastes the image with ⌘V and submits it.
 enum DemoTake {
     static let notification = Notification.Name("com.oralart.snapback.dev.take")
     private static let claudeBundleID = "com.anthropic.claudefordesktop"
@@ -125,22 +125,22 @@ enum DemoTake {
                                    y: (button.midY - shown.rect.minY) / shown.zoom))
         }
         log("annotated", to: times)
-        // Keep the real toolbar visible until the operator clicks Send to Claude.
+        // Keep the real toolbar visible until the operator clicks Copy & Open Claude.
         for _ in 0..<600 where CaptureCoordinator.shared.demoSession != nil {
             try? await Task.sleep(for: .milliseconds(100))
         }
         guard CaptureCoordinator.shared.demoSession == nil, CaptureCoordinator.shared.demoIsSending else {
-            log("failed the annotation wasn't sent to Claude", to: times)
+            log("failed the annotation wasn't copied for Claude", to: times)
             return
         }
-        log("sent", to: times)
+        log("copied", to: times)
 
-        // Wait for the normal send pipeline; the operator verifies the attachment before submitting.
+        // Wait for the image to be copied and Claude opened; the operator pastes it and submits.
         for _ in 0..<100 where CaptureCoordinator.shared.demoIsSending {
             try? await Task.sleep(for: .milliseconds(100))
         }
         guard !CaptureCoordinator.shared.demoIsSending else {
-            log("failed sending to Claude timed out", to: times)
+            log("failed copying for Claude timed out", to: times)
             return
         }
         log("ready", to: times)
@@ -149,7 +149,7 @@ enum DemoTake {
     // MARK: Windows
 
     /// Puts Claude in the left half of the layout and the page in the right, and brings the page to the front,
-    /// since the capture is of the front window. Done with Accessibility, which Snapback has for pasting.
+    /// since the capture is of the front window. Done with Accessibility, which Snapback has for finding the front window.
     private static func arrange(_ request: Request) -> Bool {
         let apps = NSWorkspace.shared.runningApplications
         guard let browser = apps.first(where: { $0.localizedName == request.browser }),

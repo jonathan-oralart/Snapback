@@ -1,6 +1,6 @@
 #!/bin/zsh
 # Prepares a README demo take for CleanShot X. Start its recording, activate Snapback with the real
-# capture shortcut, click Send to Claude, verify the image, and submit it. The page reloads after Claude edits it.
+# capture shortcut, click Copy & Open Claude, paste with ⌘V, verify the image, and submit it. The page reloads after Claude edits it.
 #
 #   scripts/record-demo.sh <name> --serve       serve the separate demo repo, open the page and lay out the windows (leave it running)
 #   scripts/record-demo.sh <name> --save-take   save your latest capture's markers as the take to replay
@@ -13,8 +13,8 @@
 # Select this folder in Claude once, before recording. Submit only the attached image, without a text prompt.
 # Every take puts Claude in the left half of LAYOUT and the page in the right, with space around and between the windows. Record the display below the menu bar in CleanShot.
 # LAYOUT=x,y,w,h (points from the top left of the main display; default up to 1224×700, centred on screen);
-# BROWSER defaults to Google Chrome. Starts a new Claude Code session
-# using Claude's selected folder. Refuses uncommitted demo changes; restore the demo yourself before a repeat take.
+# BROWSER defaults to Google Chrome. Snapback only switches to Claude, so have a new Claude Code session open
+# in the demo folder before the take. Refuses uncommitted demo changes; restore the demo yourself before a repeat take.
 set -euo pipefail
 zmodload zsh/datetime
 cd "$(dirname "$0")/.."
@@ -115,9 +115,9 @@ wait_for 3 "$NOT_RUNNING" logged armed
 echo "Start CleanShot recording with clicks and keystrokes enabled, then press Snapback’s capture shortcut (default ⇧⌘2)."
 wait_for 130 "Snapback wasn't activated" logged start
 wait_for 30 "the annotation didn't finish" logged annotated
-echo "Click Send to Claude in Snapback’s toolbar."
+echo "Click Copy & Open Claude in Snapback’s toolbar."
 wait_for 90 "the take didn't finish" logged ready
-echo "Verify the attached image in Claude, then submit it. Recording until the demo page changes…"
+echo "Paste the image into Claude with ⌘V, verify it, then submit it. Recording until the demo page changes…"
 
 # Claude may edit more than once: wait for the first change, then until the file has been still for 5 seconds.
 changed() { [[ $(stat -f %Fm "$PAGE") != $original ]]; }

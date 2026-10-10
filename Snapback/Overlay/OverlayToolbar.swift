@@ -11,7 +11,7 @@ struct HistoryPosition {
     var hasNewer: Bool { index.map { $0 > 0 || hasDraft } ?? false }
 }
 
-/// History arrows, marker colour and size, and Send, under the screenshot. Closing is done by clicking the background.
+/// History arrows, marker colour and size, Copy and Copy & Open Claude, under the screenshot. Closing is done by clicking the background.
 struct OverlayToolbar: View {
     let hasMarkers: Bool
     @Binding var style: MarkerStyle
@@ -35,11 +35,11 @@ struct OverlayToolbar: View {
             .buttonStyle(CapsuleButtonStyle())
             .help("Copy the annotated image")
             Button(action: onSend) {
-                Label("Send to Claude", systemImage: "paperplane.fill")
+                Label("Copy & Open Claude", systemImage: "arrow.up.forward.app")
             }
             .buttonStyle(CapsuleButtonStyle(isProminent: true))
             .disabled(!hasMarkers)
-            .help("Send to a new Claude Code chat")
+            .help("Copy the annotated image and switch to Claude to paste it (⌘V)")
             #if DEBUG
             .onGeometryChange(for: CGRect.self, of: { $0.frame(in: .global) }) { DemoTake.sendButton = $0 }
             #endif

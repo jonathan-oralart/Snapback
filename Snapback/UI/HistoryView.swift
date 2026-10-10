@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Recent sent captures. Clicking one reopens it in the overlay to change and send again.
+/// Recent captures. Clicking one reopens it in the overlay to change and copy again.
 struct HistoryView: View {
     @Environment(\.dismissWindow) private var dismissWindow
     private let store = CaptureStore.shared
