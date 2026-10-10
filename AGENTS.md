@@ -12,6 +12,8 @@ The Xcode project is generated from `project.yml` with XcodeGen; edit that and r
 
 ## Releasing
 
+Commit each chunk of changes as soon as it builds, before starting the next request: one commit per change, so each subject reads as one release note.
+
 Push main with `scripts/push.sh`, not `git push`: it pushes, then releases the next patch version (1.0.6 → 1.0.7) through `release.sh` if there are `feat:`, `fix:` or `perf:` commits since the last release tag. It needs the sandbox off. Run `release.sh` by hand for a bigger version jump.
 
 `scripts/release.sh <version>` archives, signs with Developer ID (Xcode's cloud-managed certificate), notarizes, makes the DMG, writes Sparkle's `appcast.xml` and publishes both to a GitHub Release. Commit first; the build number is the commit count. Release notes are the `feat:`, `fix:` and `perf:` commit subjects since the last release, so write those for users. Setup and details are in README.md.
