@@ -67,7 +67,7 @@ struct SettingsView: View {
 
             Section {
                 FixedShortcut("Previous / Next frame", keys: "← →")
-                FixedShortcut("Keep or remove this frame", keys: "space")
+                FixedShortcut("Add or remove this frame", keys: "space")
                 FixedShortcut("Previous / Next kept frame", keys: "↑ ↓")
             } header: {
                 Text("While picking frames from a recording")

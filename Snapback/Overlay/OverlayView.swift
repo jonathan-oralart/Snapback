@@ -88,7 +88,7 @@ struct OverlayView: View {
                     RecordingTimeline(session: session, recording: recording, isCropping: $isCropping)
                         .frame(width: timelineWidth)
                 }
-                OverlayToolbar(hasMarkers: session.hasMarkers, style: $session.style, history: historyPosition,
+                OverlayToolbar(style: $session.style, history: historyPosition,
                                onNavigate: onNavigate, onCopy: onCopy, onSend: onSend)
             }
             .onGeometryChange(for: CGFloat.self, of: \.size.height) { controlsHeight = $0 }
@@ -113,7 +113,7 @@ struct OverlayView: View {
                 Button("", action: { undo(redo: false) }).keyboardShortcut("z")
                 Button("", action: { undo(redo: true) }).keyboardShortcut("z", modifiers: [.command, .shift])
                 Button("", action: discardKey).globalKeyboardShortcut(.discard)
-                Button("", action: { if session.hasMarkers { onSend() } }).globalKeyboardShortcut(.send)
+                Button("", action: onSend).globalKeyboardShortcut(.send)
                 Button("", action: onCopy).globalKeyboardShortcut(.copy)
             }
             .opacity(0)
@@ -478,17 +478,18 @@ struct OverlayView: View {
 
     private var screenSize: CGSize { session.capture.screen.frame.size }
 
-    /// Pins sit beside their number. Boxes use the side with room and least overlap with other markers.
-    /// The bubble's tail points back at the marker.
+    /// Pins sit beside their number. Boxes use the side with room and least overlap with other markers,
+    /// or sit inside the box if no side has room. Notes stay clear of the controls. The bubble's tail points back at the marker.
     private func placement(for marker: Marker, size: CGSize) -> (offset: CGSize, edge: Edge, tailOffset: CGFloat) {
-        let screen = CGRect(origin: .zero, size: screenSize).insetBy(dx: 8, dy: 8)
-        let clampX = { (x: CGFloat) in min(max(x, screen.minX), screen.maxX - size.width) }
-        let clampY = { (y: CGFloat) in min(max(y, screen.minY), screen.maxY - size.height) }
+        var area = CGRect(origin: .zero, size: screenSize).insetBy(dx: 8, dy: 8)
+        area.size.height = controlsTop - 8 - area.minY
+        let clampX = { (x: CGFloat) in min(max(x, area.minX), area.maxX - size.width) }
+        let clampY = { (y: CGFloat) in min(max(y, area.minY), area.maxY - size.height) }
         switch marker.shape {
         case .pin(let point):
             let center = onScreen(point)
             let reach = session.style.pinRadius * zoom + 4
-            let fitsRight = center.x + reach + size.width <= screen.maxX
+            let fitsRight = center.x + reach + size.width <= area.maxX
             let x = fitsRight ? center.x + reach : center.x - reach - size.width
             let y = clampY(center.y - size.height / 2)
             return (CGSize(width: x, height: y), fitsRight ? .leading : .trailing, center.y - y)
@@ -496,9 +497,16 @@ struct OverlayView: View {
             let origin = onScreen(rect.origin)
             let box = CGRect(x: origin.x, y: origin.y, width: rect.width * zoom, height: rect.height * zoom)
             let anchorX = box.minX + min(box.width / 2, 40)
+            let anchorY = box.minY + min(box.height / 2, 40)
             let x = clampX(anchorX - 28)
-            let below = CGRect(x: x, y: box.maxY + 4, width: size.width, height: size.height)
-            let above = CGRect(x: x, y: box.minY - 4 - size.height, width: size.width, height: size.height)
+            let y = clampY(anchorY - 28)
+            // In order of preference when they overlap other markers equally.
+            let candidates: [(frame: CGRect, edge: Edge, tailOffset: CGFloat)] = [
+                (CGRect(x: x, y: box.maxY + 4, width: size.width, height: size.height), .top, anchorX - x),
+                (CGRect(x: x, y: box.minY - 4 - size.height, width: size.width, height: size.height), .bottom, anchorX - x),
+                (CGRect(x: box.maxX + 4, y: y, width: size.width, height: size.height), .leading, anchorY - y),
+                (CGRect(x: box.minX - 4 - size.width, y: y, width: size.width, height: size.height), .trailing, anchorY - y),
+            ]
             let obstacles = session.markers.filter { $0.id != marker.id }.map { other -> CGRect in
                 switch other.shape {
                 case .box(let rect):
@@ -512,16 +520,18 @@ struct OverlayView: View {
                 }
             }
             func overlap(_ candidate: CGRect) -> CGFloat {
-                obstacles.reduce(0) { area, obstacle in
+                obstacles.reduce(0) { total, obstacle in
                     let intersection = candidate.intersection(obstacle)
-                    return area + (intersection.isNull ? 0 : intersection.width * intersection.height)
+                    return total + (intersection.isNull ? 0 : intersection.width * intersection.height)
                 }
             }
-            let fitsBelow = screen.contains(below)
-            let fitsAbove = screen.contains(above)
-            let useBelow = fitsBelow != fitsAbove ? fitsBelow : overlap(below) <= overlap(above)
-            let y = clampY(useBelow ? below.minY : above.minY)
-            return (CGSize(width: x, height: y), useBelow ? .top : .bottom, anchorX - x)
+            if let best = candidates.filter({ area.contains($0.frame) }).min(by: { overlap($0.frame) < overlap($1.frame) }) {
+                return (CGSize(width: best.frame.minX, height: best.frame.minY), best.edge, best.tailOffset)
+            }
+            // Inside the top-left corner, pointing up at the box's top edge.
+            let insideX = clampX(box.minX + 8)
+            let insideY = clampY(box.minY + 4)
+            return (CGSize(width: insideX, height: insideY), .top, anchorX - insideX)
         }
     }
 

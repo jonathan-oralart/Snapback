@@ -9,11 +9,15 @@ struct HistoryPosition {
 
     var hasOlder: Bool { (index ?? -1) + 1 < count }
     var hasNewer: Bool { index.map { $0 > 0 || hasDraft } ?? false }
+
+    /// Every capture you can step to, oldest first, counting the unsaved one.
+    var slots: Int { count + (index == nil || hasDraft ? 1 : 0) }
+    /// This capture's slot, oldest first.
+    var slot: Int { slots - 1 - (index.map { $0 + (hasDraft ? 1 : 0) } ?? 0) }
 }
 
 /// History arrows, marker colour and size, and Send, under the screenshot. Closing is done by clicking the background.
 struct OverlayToolbar: View {
-    let hasMarkers: Bool
     @Binding var style: MarkerStyle
     let history: HistoryPosition
     let onNavigate: (Int) -> Void
@@ -38,7 +42,6 @@ struct OverlayToolbar: View {
                 Label("Send to Claude", systemImage: "paperplane.fill")
             }
             .buttonStyle(CapsuleButtonStyle(isProminent: true))
-            .disabled(!hasMarkers)
             .help("Send to a new Claude Code chat")
             #if DEBUG
             .onGeometryChange(for: CGRect.self, of: { $0.frame(in: .global) }) { DemoTake.sendButton = $0 }
@@ -49,7 +52,7 @@ struct OverlayToolbar: View {
     }
 }
 
-/// Older and newer arrows around this capture's place in Recent.
+/// Older and newer arrows around page dots for Recent, newest on the right.
 private struct HistoryControls: View {
     let position: HistoryPosition
     let onNavigate: (Int) -> Void
@@ -57,10 +60,8 @@ private struct HistoryControls: View {
     var body: some View {
         HStack(spacing: 2) {
             arrow("chevron.left", step: 1, enabled: position.hasOlder, help: "Older capture (,)")
-            Text(position.index.map { "\($0 + 1) / \(position.count)" } ?? "New")
-                .font(.callout.monospacedDigit())
-                .foregroundStyle(.secondary)
-                .frame(minWidth: 44)
+            PageDots(count: position.slots, current: position.slot)
+                .help(position.index.map { "Capture \($0 + 1) of \(position.count)" } ?? "New capture")
             arrow("chevron.right", step: -1, enabled: position.hasNewer, help: "Newer capture (.)")
         }
     }
@@ -77,6 +78,34 @@ private struct HistoryControls: View {
         .disabled(!enabled)
         .opacity(enabled ? 1 : 0.3)
         .help(help)
+    }
+}
+
+/// A row of dots with the current one drawn longer. Long histories show a window of dots around the
+/// current one, with the end dots shrunk where more continue past them.
+private struct PageDots: View {
+    let count: Int
+    let current: Int
+
+    private static let maxVisible = 7
+    private static let dot: CGFloat = 5
+    private static let currentWidth: CGFloat = 14
+    private static let spacing: CGFloat = 4
+
+    var body: some View {
+        let visible = min(count, Self.maxVisible)
+        let start = min(max(current - visible / 2, 0), count - visible)
+        HStack(spacing: Self.spacing) {
+            ForEach(start..<start + visible, id: \.self) { slot in
+                let isEdge = (slot == start && start > 0) || (slot == start + visible - 1 && start + visible < count)
+                Capsule()
+                    .fill(slot == current ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary.opacity(0.5)))
+                    .frame(width: slot == current ? Self.currentWidth : Self.dot, height: Self.dot)
+                    .scaleEffect(isEdge ? 0.6 : 1)
+            }
+        }
+        .padding(.horizontal, 6)
+        .frame(height: 28)
     }
 }
 

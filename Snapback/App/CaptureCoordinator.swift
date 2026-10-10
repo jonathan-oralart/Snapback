@@ -190,8 +190,6 @@ final class CaptureCoordinator {
     }
 
     private func close(_ session: AnnotationSession, to destination: Destination) {
-        // Only Copy works without markers: it copies the plain window, or the recording's frames.
-        guard destination == .clipboard || session.hasMarkers else { return }
         guard destination != .recent || (session.hasChanges && session.isWorthSaving) else {
             dismiss()
             return

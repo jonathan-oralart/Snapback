@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Under a recording: its frames along a strip to drag through, the kept frames marked on it, and Keep and Crop.
+/// Under a recording: its frames along a strip to drag through, the kept frames marked on it, and Add Frame and Crop.
 struct RecordingTimeline: View {
     let session: AnnotationSession
     let recording: Recording
@@ -21,12 +21,14 @@ struct RecordingTimeline: View {
                 .foregroundStyle(.secondary)
                 .frame(minWidth: 52, alignment: .trailing)
             Button(action: session.toggleKeep) {
-                Label(session.frameIndex == nil ? "Keep" : "Kept", systemImage: session.frameIndex == nil ? "plus" : "checkmark")
-                    .frame(minWidth: 60)
+                addFrameLabel
+                    .frame(minWidth: 128)
             }
-            .buttonStyle(CapsuleButtonStyle(isProminent: session.frameIndex != nil))
+            .buttonStyle(CapsuleButtonStyle())
             .disabled(!session.canAnnotate || isCropping)
-            .help("Keep this frame to annotate and send (Space). Up to \(AnnotationSession.maxFrames).")
+            .help(session.frameIndex == nil
+                ? "Add this frame to the image you send (Space). Up to \(AnnotationSession.maxFrames)."
+                : "Remove this frame and its markers (Space)")
             Button {
                 session.selectedID = nil
                 isCropping.toggle()
@@ -38,6 +40,28 @@ struct RecordingTimeline: View {
         }
         .padding(8)
         .glassEffect(.regular, in: .rect(cornerRadius: 22))
+    }
+
+    /// "Add Frame" with its Space key, or once the frame is added, a check in the marker colour like its pin.
+    @ViewBuilder private var addFrameLabel: some View {
+        if session.frameIndex == nil {
+            HStack(spacing: 6) {
+                Label("Add Frame", systemImage: "plus")
+                Text("Space")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1)
+                    .background(RoundedRectangle(cornerRadius: 4).strokeBorder(.secondary.opacity(0.6)))
+            }
+        } else {
+            Label {
+                Text("Added")
+            } icon: {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.white, Color(nsColor: session.style.color))
+            }
+        }
     }
 
     private var strip: some View {
