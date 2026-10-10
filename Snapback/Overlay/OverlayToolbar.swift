@@ -125,7 +125,7 @@ private struct StyleControls: View {
                 HStack(spacing: 5) {
                     Circle().fill(Color(nsColor: style.color))
                         .overlay(Circle().strokeBorder(.white.opacity(0.9), lineWidth: 1.5))
-                        .frame(width: 8 + 4 * CGFloat(style.size.rawValue), height: 8 + 4 * CGFloat(style.size.rawValue))
+                        .frame(width: 14 * style.size.factor, height: 14 * style.size.factor)
                         .frame(width: 18, height: 18)
                     Image(systemName: "chevron.right")
                         .font(.system(size: 10, weight: .semibold))
@@ -170,7 +170,7 @@ private struct StyleControls: View {
                     Button { style.size = size } label: {
                         Circle()
                             .fill(style.size == size ? Color(nsColor: style.color) : Color.secondary.opacity(0.45))
-                            .frame(width: 8 + 4 * CGFloat(size.rawValue), height: 8 + 4 * CGFloat(size.rawValue))
+                            .frame(width: 14 * size.factor, height: 14 * size.factor)
                             .frame(width: 22, height: 26)
                             .contentShape(Rectangle())
                             .hoverHighlight(in: RoundedRectangle(cornerRadius: 6))

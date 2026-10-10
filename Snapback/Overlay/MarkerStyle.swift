@@ -4,34 +4,35 @@ import AppKit
 /// so the two always match.
 struct MarkerStyle: Codable, Equatable {
     enum Tint: String, Codable, CaseIterable {
-        case red, blue, green
+        case red, blue, green, pink
 
         var color: NSColor {
             switch self {
             case .red: NSColor(srgbRed: 0.90, green: 0.18, blue: 0.20, alpha: 1)
             case .blue: NSColor(srgbRed: 0.10, green: 0.45, blue: 0.95, alpha: 1)
             case .green: NSColor(srgbRed: 0.10, green: 0.65, blue: 0.32, alpha: 1)
+            case .pink: NSColor(srgbRed: 0.91, green: 0.30, blue: 0.55, alpha: 1)
             }
         }
 
         var name: String { rawValue.capitalized }
     }
 
-    /// Large is the default; the others step down from it.
+    /// Medium is the default. Raw values start at 1 because saved captures store them, and 0 was a smaller size that's gone.
     enum Size: Int, Codable, CaseIterable {
-        case small, medium, large
+        case small = 1, medium, large
 
         var factor: CGFloat {
             switch self {
-            case .small: 0.62
-            case .medium: 0.8
-            case .large: 1
+            case .small: 0.8
+            case .medium: 1
+            case .large: 1.25
             }
         }
     }
 
     var tint = Tint.red
-    var size = Size.large
+    var size = Size.medium
 
     var color: NSColor { tint.color }
     var pinRadius: CGFloat { 13 * size.factor }
@@ -40,7 +41,8 @@ struct MarkerStyle: Codable, Equatable {
     /// One size step up or down, stopping at the ends.
     func resized(by step: Int) -> MarkerStyle {
         var style = self
-        style.size = Size(rawValue: min(max(size.rawValue + step, 0), Size.allCases.count - 1)) ?? size
+        let index = Size.allCases.firstIndex(of: size)! + step
+        style.size = Size.allCases[min(max(index, 0), Size.allCases.count - 1)]
         return style
     }
 
