@@ -26,6 +26,13 @@ final class OverlayPanel: NSPanel {
         makeFirstResponder(hosting)
     }
 
+    /// No beep for a key nothing handled, like a held , landing just as a history step swaps the view in,
+    /// before the new one has the keyboard. No key in the overlay deserves a "can't do that" sound.
+    override func noResponder(for eventSelector: Selector) {
+        guard eventSelector != #selector(NSResponder.keyDown(with:)) else { return }
+        super.noResponder(for: eventSelector)
+    }
+
     /// Borderless panels can't take typing unless they say so.
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
