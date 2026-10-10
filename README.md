@@ -25,7 +25,7 @@ Requires macOS 26.4 and the [Claude desktop app](https://claude.ai/download). On
 | Move or resize | Drag a marker, or a box's corner handles |
 | Marker size | − and + |
 | Delete a marker | Select it, then ⌫ |
-| Older / newer capture | ← → |
+| Older / newer capture | , and . |
 | Send to Claude | ⌘↩ |
 | Copy the annotated image | ⌘C |
 | Close and save | Esc, or click outside the screenshot |

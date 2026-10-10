@@ -33,7 +33,7 @@ extension View {
 }
 
 /// A rounded rectangle with a small triangle on one edge.
-private struct CalloutShape: Shape {
+nonisolated private struct CalloutShape: Shape {
     static let tailLength: CGFloat = 7
     let edge: Edge
     let tailOffset: CGFloat
@@ -71,7 +71,7 @@ private struct CalloutShape: Shape {
     }
 }
 
-/// Multi-line note field: Return adds a line, Esc leaves the note.
+/// Multi-line note field: Return adds a line, Esc leaves the note, Tab also clears its selection.
 struct NoteEditor: View {
     @Binding var note: String
     var focus: FocusState<OverlayView.Focus?>.Binding

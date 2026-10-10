@@ -56,12 +56,12 @@ private struct HistoryControls: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            arrow("chevron.left", step: 1, enabled: position.hasOlder, help: "Older capture")
+            arrow("chevron.left", step: 1, enabled: position.hasOlder, help: "Older capture (,)")
             Text(position.index.map { "\($0 + 1) / \(position.count)" } ?? "New")
                 .font(.callout.monospacedDigit())
                 .foregroundStyle(.secondary)
                 .frame(minWidth: 44)
-            arrow("chevron.right", step: -1, enabled: position.hasNewer, help: "Newer capture")
+            arrow("chevron.right", step: -1, enabled: position.hasNewer, help: "Newer capture (.)")
         }
     }
 

@@ -6,6 +6,7 @@ final class CaptureCoordinator {
     static let shared = CaptureCoordinator()
 
     private var panel: OverlayPanel?
+    private var captureTask: Task<Void, Never>?
     private var pill: RecordingPill?
     #if DEBUG
     /// The real overlay session and send progress, for demo takes.
@@ -15,7 +16,7 @@ final class CaptureCoordinator {
     #endif
     /// A capture from history is being opened; recordings take a moment, and steps shouldn't overtake each other.
     private var isNavigating = false
-    /// The new capture the overlay opened with, kept while stepping through history so → can come back to it
+    /// The new capture the overlay opened with, kept while stepping through history so . can come back to it
     /// even though it isn't worth saving to Recent.
     private var draft: AnnotationSession?
 
@@ -37,16 +38,26 @@ final class CaptureCoordinator {
         SendSound.current.preload()
     }
 
-    func start() {
-        guard panel == nil, !ScreenRecorder.shared.isRecording else { return }
+    /// Captures the front window, or dismisses the current capture on a second press.
+    func toggleCapture() {
+        if panel != nil || captureTask != nil {
+            dismiss()
+            return
+        }
+        guard !ScreenRecorder.shared.isRecording else { return }
         guard Permission.allGranted else {
             PermissionsWindow.showIfNeeded()
             return
         }
-        Task {
+        captureTask = Task {
+            // A cancelled task may finish after another capture has started.
+            defer { if !Task.isCancelled { captureTask = nil } }
             do {
-                present(AnnotationSession(capture: try await WindowCapture.captureFrontWindow()))
+                let capture = try await WindowCapture.captureFrontWindow()
+                guard !Task.isCancelled else { return }
+                present(AnnotationSession(capture: capture))
             } catch {
+                guard !Task.isCancelled else { return }
                 NSSound.beep()
             }
         }
@@ -209,6 +220,8 @@ final class CaptureCoordinator {
     }
 
     private func dismiss() {
+        captureTask?.cancel()
+        captureTask = nil
         #if DEBUG
         demoSession = nil
         #endif

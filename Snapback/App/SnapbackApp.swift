@@ -10,7 +10,7 @@ struct SnapbackApp: App {
 
     init() {
         KeyboardShortcuts.onKeyDown(for: .capture) {
-            CaptureCoordinator.shared.start()
+            CaptureCoordinator.shared.toggleCapture()
         }
         KeyboardShortcuts.onKeyDown(for: .record) {
             CaptureCoordinator.shared.toggleRecording()
@@ -38,7 +38,7 @@ private struct MenuContent: View {
 
     var body: some View {
         Button("Capture Front Window") {
-            CaptureCoordinator.shared.start()
+            CaptureCoordinator.shared.toggleCapture()
         }
         .globalKeyboardShortcut(.capture)
         Button(ScreenRecorder.shared.isRecording ? "Stop Recording" : "Record Screen") {

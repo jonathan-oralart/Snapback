@@ -23,22 +23,47 @@ enum WindowCapture {
         guard let (window, app) = frontWindow(in: content) else { throw NoFrontWindow() }
 
         let filter = SCContentFilter(desktopIndependentWindow: window)
-        let config = SCStreamConfiguration()
+        let config = SCScreenshotConfiguration()
         let scale = CGFloat(filter.pointPixelScale)
-        config.width = Int(filter.contentRect.width * scale)
-        config.height = Int(filter.contentRect.height * scale)
         config.showsCursor = false
-        config.ignoreShadowsSingleWindow = true
-        config.captureResolution = .best
+        config.ignoreShadows = true
+        config.dynamicRange = .sdr
 
-        let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+        // Let the screenshot size itself to the complete window, including Chrome's separate
+        // full-screen toolbar. The content filter's rectangle can cover only the shorter document
+        // surface; using it as the output size scales the screenshot down and pads its right edge.
+        let output = try await SCScreenshotManager.captureScreenshot(contentFilter: filter, configuration: config)
+        guard var image = output.sdrImage else { throw NoFrontWindow() }
+        let frame = CGRect(origin: window.frame.origin,
+                           size: CGSize(width: CGFloat(image.width) / scale, height: CGFloat(image.height) / scale))
+        let screen = screen(containing: window.frame)
+        // Full-screen windows lose their native rounded corners. Include the usable display
+        // height so this also works when macOS keeps the menu bar or camera housing above them.
+        if frame.width >= screen.frame.width - 1, frame.height >= screen.visibleFrame.height - 1 {
+            image = try roundingCorners(of: image, radius: 12 * scale)
+        }
         return CapturedWindow(
             image: image,
-            frame: window.frame,
-            screen: screen(containing: window.frame),
+            frame: frame,
+            screen: screen,
             appName: app.localizedName ?? window.owningApplication?.applicationName ?? "App",
             windowTitle: window.title?.isEmpty == false ? window.title : nil
         )
+    }
+
+    /// Round the source once so the overlay, exported shadow and saved capture share its outline.
+    private static func roundingCorners(of image: CGImage, radius: CGFloat) throws -> CGImage {
+        guard let context = CGContext(
+            data: nil, width: image.width, height: image.height, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { throw NoFrontWindow() }
+        let bounds = CGRect(x: 0, y: 0, width: image.width, height: image.height)
+        context.addPath(CGPath(roundedRect: bounds, cornerWidth: radius, cornerHeight: radius, transform: nil))
+        context.clip()
+        context.draw(image, in: bounds)
+        guard let rounded = context.makeImage() else { throw NoFrontWindow() }
+        return rounded
     }
 
     /// The frontmost app's front window, as ScreenCaptureKit sees it.
@@ -50,10 +75,13 @@ enum WindowCapture {
         return (window, app)
     }
 
-    /// The app's frontmost normal window, from the window server's front-to-back list.
+    /// The app's frontmost normal window containing its focused window's centre.
+    /// Chrome puts a separate, narrow toolbar window first in full screen; capturing it
+    /// squeezes the document into a toolbar-height image.
     private static func frontWindowID(of pid: pid_t) -> CGWindowID? {
         let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
-        guard let list = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else { return nil }
+        guard let center = focusedWindowCenter(of: pid),
+              let list = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else { return nil }
         for info in list {
             guard info[kCGWindowOwnerPID as String] as? pid_t == pid,
                   info[kCGWindowLayer as String] as? Int == 0,
@@ -61,11 +89,33 @@ enum WindowCapture {
                   let bounds = info[kCGWindowBounds as String] as? NSDictionary,
                   let rect = CGRect(dictionaryRepresentation: bounds),
                   rect.width > 40, rect.height > 40,
+                  rect.contains(center),
                   let id = info[kCGWindowNumber as String] as? CGWindowID
             else { continue }
             return id
         }
         return nil
+    }
+
+    /// Accessibility identifies the document window, rather than its auxiliary window-server surfaces.
+    private static func focusedWindowCenter(of pid: pid_t) -> CGPoint? {
+        let app = AXUIElementCreateApplication(pid)
+        var focused: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(app, kAXFocusedWindowAttribute as CFString, &focused) == .success,
+              let focused, CFGetTypeID(focused) == AXUIElementGetTypeID() else { return nil }
+        let window = focused as! AXUIElement
+        var position: CFTypeRef?
+        var size: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(window, kAXPositionAttribute as CFString, &position) == .success,
+              AXUIElementCopyAttributeValue(window, kAXSizeAttribute as CFString, &size) == .success,
+              let position, CFGetTypeID(position) == AXValueGetTypeID(),
+              let size, CFGetTypeID(size) == AXValueGetTypeID() else { return nil }
+        var origin = CGPoint.zero
+        var dimensions = CGSize.zero
+        guard AXValueGetValue(position as! AXValue, .cgPoint, &origin),
+              AXValueGetValue(size as! AXValue, .cgSize, &dimensions),
+              dimensions.width > 0, dimensions.height > 0 else { return nil }
+        return CGPoint(x: origin.x + dimensions.width / 2, y: origin.y + dimensions.height / 2)
     }
 
     static func screen(containing frame: CGRect) -> NSScreen {

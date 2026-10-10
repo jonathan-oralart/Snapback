@@ -57,7 +57,7 @@ struct SettingsView: View {
                 FixedShortcut("Delete selected marker", keys: "⌫")
                 FixedShortcut("Edit selected note, or copy image", keys: "↩")
                 FixedShortcut("Undo / Redo", keys: "⌘Z  ⇧⌘Z")
-                FixedShortcut("Older / Newer capture", keys: "← →  or  ⌘[ ⌘]")
+                FixedShortcut("Older / Newer capture", keys: ",  .")
                 FixedShortcut("Leave note, deselect, close and save", keys: "esc")
             } header: {
                 Text("While annotating")
@@ -69,7 +69,6 @@ struct SettingsView: View {
                 FixedShortcut("Previous / Next frame", keys: "← →")
                 FixedShortcut("Keep or remove this frame", keys: "space")
                 FixedShortcut("Previous / Next kept frame", keys: "↑ ↓")
-                FixedShortcut("Older / Newer capture", keys: "⌘[ ⌘]")
             } header: {
                 Text("While picking frames from a recording")
             } footer: {

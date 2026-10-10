@@ -11,7 +11,7 @@ struct OverlayView: View {
     let onDiscard: () -> Void
     /// Steps to an older (+1) or newer (−1) capture in history.
     let onNavigate: (Int) -> Void
-    /// An unsaved new capture sits before the newest in Recent, so → can go back to it.
+    /// An unsaved new capture sits before the newest in Recent, so . can go back to it.
     let hasDraft: Bool
 
     @State private var hoveredID: UUID?
@@ -105,13 +105,14 @@ struct OverlayView: View {
             // Invisible buttons for keys whose meaning depends on whether a note is being typed in.
             Group {
                 Button("", action: escape).keyboardShortcut(.cancelAction)
+                Button("", action: { select(nil) })
+                    .keyboardShortcut(.tab, modifiers: [])
+                    .disabled(focus != .note)
                 Button("", action: { undo(redo: false) }).keyboardShortcut("z")
                 Button("", action: { undo(redo: true) }).keyboardShortcut("z", modifiers: [.command, .shift])
                 Button("", action: discardKey).globalKeyboardShortcut(.discard)
                 Button("", action: { if session.hasMarkers { onSend() } }).globalKeyboardShortcut(.send)
-                Button("", action: copyKey).globalKeyboardShortcut(.copy)
-                Button("", action: { if historyPosition.hasOlder { onNavigate(1) } }).keyboardShortcut("[")
-                Button("", action: { if historyPosition.hasNewer { onNavigate(-1) } }).keyboardShortcut("]")
+                Button("", action: onCopy).globalKeyboardShortcut(.copy)
             }
             .opacity(0)
             .accessibilityHidden(true)
@@ -136,17 +137,18 @@ struct OverlayView: View {
             session.style = session.style.resized(by: "+=".contains(press.characters) ? 1 : -1)
             return .handled
         }
-        .onKeyPress(keys: [.leftArrow, .rightArrow]) { press in
-            // ← older, → newer, matching the toolbar's arrows. Arrows move the cursor while typing.
+        .onKeyPress(characters: CharacterSet(charactersIn: ",.")) { press in
+            // , older and . newer, matching the toolbar's arrows.
             guard focus != .note else { return .ignored }
-            // A recording steps a frame at a time instead; history is ⌘[ and ⌘].
-            if session.recording != nil {
-                session.step(by: press.key == .leftArrow ? -1 : 1)
-                return .handled
-            }
-            let step = press.key == .leftArrow ? 1 : -1
+            let step = press.characters == "," ? 1 : -1
             guard step == 1 ? historyPosition.hasOlder : historyPosition.hasNewer else { return .handled }
             onNavigate(step)
+            return .handled
+        }
+        .onKeyPress(keys: [.leftArrow, .rightArrow]) { press in
+            // A recording's previous and next frame. Arrows move the cursor while typing.
+            guard focus != .note, session.recording != nil else { return .ignored }
+            session.step(by: press.key == .leftArrow ? -1 : 1)
             return .handled
         }
         .onKeyPress(keys: [.upArrow, .downArrow]) { press in
@@ -275,15 +277,6 @@ struct OverlayView: View {
             onDiscard()
         } else {
             onSave()
-        }
-    }
-
-    private func copyKey() {
-        // ⌘C copies the selected text while typing; it only copies the image outside a note.
-        if focus == .note, KeyboardShortcuts.getShortcut(for: .copy) == .init(.c, modifiers: .command) {
-            NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
-        } else {
-            onCopy()
         }
     }
 
@@ -468,13 +461,12 @@ struct OverlayView: View {
         return min(0.9, height / window.height, width / window.width)
     }
 
-    /// Where the screenshot sits within the overlay, top-left origin: centred on the screen
-    /// together with the toolbar below it.
+    /// Where the screenshot sits within the overlay, top-left origin: centred in the space above the controls.
     private var imageRect: CGRect {
         let window = canvasSize
         let size = CGSize(width: window.width * zoom, height: window.height * zoom)
-        let groupHeight = size.height + Self.toolbarGap + controlsSize.height
-        return CGRect(x: (screenSize.width - size.width) / 2, y: (screenSize.height - groupHeight) / 2, width: size.width, height: size.height)
+        let space = controlsOffset.height - Self.toolbarGap - Self.margin
+        return CGRect(x: (screenSize.width - size.width) / 2, y: Self.margin + (space - size.height) / 2, width: size.width, height: size.height)
     }
 
     /// A point in window points, as shown in the overlay.
@@ -531,9 +523,9 @@ struct OverlayView: View {
         }
     }
 
-    /// Centred just below the screenshot.
+    /// Centred at the bottom of the screen, so the toolbar stays put whatever the screenshot's size.
     private var controlsOffset: CGSize {
-        CGSize(width: (screenSize.width - controlsSize.width) / 2, height: imageRect.maxY + Self.toolbarGap)
+        CGSize(width: (screenSize.width - controlsSize.width) / 2, height: screenSize.height - Self.margin - controlsSize.height)
     }
 
     /// As wide as the screenshot, within reason.

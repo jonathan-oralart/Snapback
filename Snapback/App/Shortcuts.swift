@@ -2,7 +2,7 @@ import AppKit
 import KeyboardShortcuts
 
 extension KeyboardShortcuts.Name {
-    /// Global hotkey: capture the front window and start annotating.
+    /// Global hotkey: capture the front window, or dismiss the open capture.
     static let capture = Self("capture", default: .init(.two, modifiers: [.command, .shift]))
     /// Global hotkey: start recording the screen, or stop and pick frames.
     static let record = Self("record", default: .init(.r, modifiers: [.control, .option, .command]))
