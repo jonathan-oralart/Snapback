@@ -1,3 +1,4 @@
+import KeyboardShortcuts
 import SwiftUI
 
 /// A capture's place in Recent, newest first. `index` is nil for a capture that hasn't been saved yet.
@@ -37,12 +38,12 @@ struct OverlayToolbar: View {
                 Label("Copy", systemImage: "doc.on.doc")
             }
             .buttonStyle(CapsuleButtonStyle())
-            .help("Copy the annotated image")
+            .tooltip("Copy the annotated image", shortcut: KeyboardShortcuts.Name.copy.symbols)
             Button(action: onSend) {
                 Label("Send to Claude", systemImage: "paperplane.fill")
             }
             .buttonStyle(CapsuleButtonStyle(isProminent: true))
-            .help("Send to a new Claude Code chat")
+            .tooltip("Send to a new Claude Code chat", shortcut: KeyboardShortcuts.Name.send.symbols)
             #if DEBUG
             .onGeometryChange(for: CGRect.self, of: { $0.frame(in: .global) }) { DemoTake.sendButton = $0 }
             #endif
@@ -59,14 +60,14 @@ private struct HistoryControls: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            arrow("chevron.left", step: 1, enabled: position.hasOlder, help: "Older capture (,)")
+            arrow("chevron.left", step: 1, enabled: position.hasOlder, help: "Older capture", shortcut: ",")
             PageDots(count: position.slots, current: position.slot)
-                .help(position.index.map { "Capture \($0 + 1) of \(position.count)" } ?? "New capture")
-            arrow("chevron.right", step: -1, enabled: position.hasNewer, help: "Newer capture (.)")
+                .tooltip(position.index.map { "Capture \($0 + 1) of \(position.count)" } ?? "New capture")
+            arrow("chevron.right", step: -1, enabled: position.hasNewer, help: "Newer capture", shortcut: ".")
         }
     }
 
-    private func arrow(_ symbol: String, step: Int, enabled: Bool, help: String) -> some View {
+    private func arrow(_ symbol: String, step: Int, enabled: Bool, help: String, shortcut: String) -> some View {
         Button { onNavigate(step) } label: {
             Image(systemName: symbol)
                 .font(.system(size: 12, weight: .semibold))
@@ -77,7 +78,7 @@ private struct HistoryControls: View {
         .buttonStyle(.plain)
         .disabled(!enabled)
         .opacity(enabled ? 1 : 0.3)
-        .help(help)
+        .tooltip(help, shortcut: shortcut)
     }
 }
 
@@ -106,6 +107,8 @@ private struct PageDots: View {
         }
         .padding(.horizontal, 6)
         .frame(height: 28)
+        // Hovering between the dots still counts.
+        .contentShape(Rectangle())
     }
 }
 
@@ -135,7 +138,7 @@ private struct StyleControls: View {
                 .hoverHighlight(in: Capsule())
             }
             .buttonStyle(.plain)
-            .help("Marker colour and size")
+            .tooltip("Marker colour and size")
 
             if isExpanded {
                 options
@@ -159,7 +162,7 @@ private struct StyleControls: View {
                             .hoverHighlight(in: Circle())
                     }
                     .buttonStyle(.plain)
-                    .help(tint.name)
+                    .tooltip(tint.name)
                 }
             }
             HStack(spacing: 0) {
@@ -175,7 +178,7 @@ private struct StyleControls: View {
                     .buttonStyle(.plain)
                 }
             }
-            .help("Marker size (− and +)")
+            .tooltip("Marker size", shortcut: "− +")
         }
     }
 }

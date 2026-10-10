@@ -26,9 +26,9 @@ struct RecordingTimeline: View {
             }
             .buttonStyle(CapsuleButtonStyle())
             .disabled(!session.canAnnotate || isCropping)
-            .help(session.frameIndex == nil
-                ? "Add this frame to the image you send (Space). Up to \(AnnotationSession.maxFrames)."
-                : "Remove this frame and its markers (Space)")
+            .tooltip(session.frameIndex == nil
+                ? "Add this frame to the image you send, up to \(AnnotationSession.maxFrames)"
+                : "Remove this frame and its markers", shortcut: "Space")
             Button {
                 session.selectedID = nil
                 isCropping.toggle()
@@ -36,7 +36,7 @@ struct RecordingTimeline: View {
                 Label(isCropping ? "Done" : "Crop", systemImage: "crop")
             }
             .buttonStyle(CapsuleButtonStyle(isProminent: isCropping))
-            .help("Choose the part of the screen to keep (↩ when done)")
+            .tooltip(isCropping ? "Keep this part of the screen" : "Choose the part of the screen to keep", shortcut: isCropping ? "↩" : nil)
         }
         .padding(8)
         .glassEffect(.regular, in: .rect(cornerRadius: 22))

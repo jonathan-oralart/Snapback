@@ -98,6 +98,7 @@ struct OverlayView: View {
         }
         .frame(width: screenSize.width, height: screenSize.height, alignment: .topLeading)
         .ignoresSafeArea()
+        .tooltipLayer()
         #if DEBUG
         .onChange(of: imageRect, initial: true) {
             DemoTake.shown = .init(rect: imageRect, zoom: zoom, screen: session.capture.screen.frame)

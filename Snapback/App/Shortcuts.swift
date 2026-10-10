@@ -12,6 +12,11 @@ extension KeyboardShortcuts.Name {
     static let copy = Self("copy", default: .init(.c, modifiers: .command))
     static let discard = Self("discard", default: .init(.delete, modifiers: .command))
 
+    /// The shortcut as symbols, like "⌘↩", or nil when it's been cleared in Settings.
+    var symbols: String? {
+        KeyboardShortcuts.getShortcut(for: self)?.description
+    }
+
     /// Recording a shortcut takes it from whichever other action had it, so one key never does two things.
     func takeShortcut(_ shortcut: KeyboardShortcuts.Shortcut?) {
         guard let shortcut else { return }
