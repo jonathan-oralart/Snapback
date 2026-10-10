@@ -261,12 +261,10 @@ struct OverlayView: View {
         }
     }
 
-    /// Esc stops typing, then clears the selection (or leaves cropping), then closes.
+    /// Esc leaves cropping, then closes the selected marker's note popup (even mid-typing), then closes.
     private func escape() {
         if isCropping {
             isCropping = false
-        } else if focus == .note {
-            focus = .canvas
         } else if session.selectedID != nil {
             select(nil)
         } else {
