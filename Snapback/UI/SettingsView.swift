@@ -5,6 +5,7 @@ import SwiftUI
 struct SettingsView: View {
     @State private var opensAtLogin = SMAppService.mainApp.status == .enabled
     @AppStorage(SendSound.defaultsKey) private var sendSound = SendSound.button
+    @AppStorage(SendTarget.defaultsKey) private var sendTarget = SendTarget.claude
     #if DEBUG
     @AppStorage(FeedbackImage.TextSize.defaultsKey) private var annotationTextSize = FeedbackImage.TextSize.standard
     #endif
@@ -27,6 +28,11 @@ struct SettingsView: View {
                             opensAtLogin = SMAppService.mainApp.status == .enabled
                         }
                     }
+                Picker("Send to", selection: $sendTarget) {
+                    ForEach(SendTarget.allCases) { target in
+                        Text(target.title).tag(target)
+                    }
+                }
                 Picker("Sound when sent or copied", selection: $sendSound) {
                     ForEach(SendSound.allCases) { sound in
                         Text(sound.title).tag(sound)
@@ -50,7 +56,7 @@ struct SettingsView: View {
             #endif
 
             Section {
-                KeyboardShortcuts.Recorder("Send to Claude", name: .send, onChange: KeyboardShortcuts.Name.send.takeShortcut)
+                KeyboardShortcuts.Recorder("Send to \(sendTarget.title)", name: .send, onChange: KeyboardShortcuts.Name.send.takeShortcut)
                 KeyboardShortcuts.Recorder("Copy image", name: .copy, onChange: KeyboardShortcuts.Name.copy.takeShortcut)
                 KeyboardShortcuts.Recorder("Close without saving", name: .discard, onChange: KeyboardShortcuts.Name.discard.takeShortcut)
                 FixedShortcut("Marker size", keys: "−  +")

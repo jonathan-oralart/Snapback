@@ -20,6 +20,7 @@ struct HistoryPosition {
 /// History arrows, marker colour and size, and Send, under the screenshot. Closing is done by clicking the background.
 struct OverlayToolbar: View {
     @Binding var style: MarkerStyle
+    @AppStorage(SendTarget.defaultsKey) private var sendTarget = SendTarget.claude
     let history: HistoryPosition
     let onNavigate: (Int) -> Void
     let onCopy: () -> Void
@@ -40,10 +41,10 @@ struct OverlayToolbar: View {
             .buttonStyle(CapsuleButtonStyle())
             .tooltip("Copy the annotated image", shortcut: KeyboardShortcuts.Name.copy.symbols)
             Button(action: onSend) {
-                Label("Send to Claude", systemImage: "paperplane.fill")
+                Label("Send to \(sendTarget.title)", systemImage: "paperplane.fill")
             }
             .buttonStyle(CapsuleButtonStyle(isProminent: true))
-            .tooltip("Send to a new Claude Code chat", shortcut: KeyboardShortcuts.Name.send.symbols)
+            .tooltip(sendTarget == .claude ? "Send to a new Claude Code chat" : "Send to a new Codex chat", shortcut: KeyboardShortcuts.Name.send.symbols)
             #if DEBUG
             .onGeometryChange(for: CGRect.self, of: { $0.frame(in: .global) }) { DemoTake.sendButton = $0 }
             #endif
@@ -115,6 +116,7 @@ private struct PageDots: View {
 /// A dot showing the current marker colour and size; clicking it opens the swatches and size dots beside it.
 private struct StyleControls: View {
     @Binding var style: MarkerStyle
+    @AppStorage(SendTarget.defaultsKey) private var sendTarget = SendTarget.claude
     @State private var isExpanded = false
 
     var body: some View {

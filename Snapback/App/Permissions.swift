@@ -3,7 +3,7 @@ import ApplicationServices
 import PermissionFlow
 import SwiftUI
 
-/// What Snapback needs from macOS: capture to see the window, Accessibility to paste into Claude.
+/// What Snapback needs from macOS: capture to see the window, Accessibility to paste into Claude or Codex.
 enum Permission: CaseIterable, Identifiable {
     case screenRecording
     case accessibility
@@ -20,7 +20,7 @@ enum Permission: CaseIterable, Identifiable {
     var purpose: String {
         switch self {
         case .screenRecording: "Captures the front window, and records the screen."
-        case .accessibility: "Pastes the screenshot into Claude."
+        case .accessibility: "Pastes the screenshot into Claude or Codex."
         }
     }
 

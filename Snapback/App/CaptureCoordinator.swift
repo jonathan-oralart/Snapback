@@ -139,7 +139,7 @@ final class CaptureCoordinator {
             session: session,
             animatesIn: panel == nil,
             hasDraft: draft != nil,
-            onSend: { [weak self] in self?.close(session, to: .claude) },
+            onSend: { [weak self] in self?.close(session, to: .chat) },
             onCopy: { [weak self] in self?.close(session, to: .clipboard) },
             onSave: { [weak self] in self?.close(session, to: .recent) },
             onDiscard: { [weak self] in self?.dismiss() },
@@ -186,7 +186,7 @@ final class CaptureCoordinator {
 
     /// Where a capture goes when the overlay closes. It's always kept in Recent as well.
     private enum Destination {
-        case recent, claude, clipboard
+        case recent, chat, clipboard
     }
 
     private func close(_ session: AnnotationSession, to destination: Destination) {
@@ -195,7 +195,7 @@ final class CaptureCoordinator {
             return
         }
         #if DEBUG
-        demoIsSending = destination == .claude
+        demoIsSending = destination == .chat
         #endif
         // Close first so the overlay is gone the moment you press the button; render once it's off screen.
         dismiss()
@@ -207,7 +207,7 @@ final class CaptureCoordinator {
             // Deliver before saving to history, so the image and sound don't wait on writing files.
             switch destination {
             case .recent: break
-            case .claude: await ClaudeCodeSender.send(png)
+            case .chat: await Sender.send(png)
             case .clipboard: Clipboard.copy(png: png)
             }
             CaptureStore.shared.save(session, png: png)

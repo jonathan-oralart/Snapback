@@ -1,23 +1,22 @@
 import AppKit
 import ApplicationServices
 
-/// Opens a new Claude Code session, then pastes the annotated screenshot into it.
-enum ClaudeCodeSender {
-    private static let claudeBundleID = "com.anthropic.claudefordesktop"
-    /// Time for the new session's composer to appear and take focus once Claude is in front.
+/// Opens a new chat in the app chosen in Settings, then pastes the annotated screenshot into it.
+enum Sender {
+    /// Time for the new chat's composer to appear and take focus once the app is in front.
     private static let pasteDelay = Duration.seconds(1)
 
     static func send(_ png: Data) async {
+        let target = SendTarget.current
         Clipboard.copy(png: png)
 
-        // Bring Claude to the front with the new session, rather than leaving the previous app focused.
+        // Bring the app to the front with the new chat, rather than leaving the previous app focused.
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = true
-        let url = URL(string: "claude://code/new")!
-        _ = try? await NSWorkspace.shared.open(url, configuration: configuration)
+        _ = try? await NSWorkspace.shared.open(target.newChatURL, configuration: configuration)
 
-        guard await waitForClaudeInFront() else {
-            notify("Claude didn't come to the front. The screenshot is on the clipboard — paste it with ⌘V.")
+        guard await waitForFront(target) else {
+            notify("\(target.title) didn't come to the front. The screenshot is on the clipboard — paste it with ⌘V.")
             return
         }
         try? await Task.sleep(for: pasteDelay)
@@ -26,24 +25,24 @@ enum ClaudeCodeSender {
             notify("Snapback needs Accessibility access to paste. The screenshot is on the clipboard — paste it with ⌘V.")
             return
         }
-        guard pasteImage() else {
-            notify("Couldn't choose Paste in Claude. The screenshot is on the clipboard.")
+        guard pasteImage(into: target) else {
+            notify("Couldn't choose Paste in \(target.title). The screenshot is on the clipboard.")
             return
         }
         SendSound.current.play()
     }
 
-    private static func waitForClaudeInFront() async -> Bool {
+    private static func waitForFront(_ target: SendTarget) async -> Bool {
         for _ in 0..<50 {
-            if NSWorkspace.shared.frontmostApplication?.bundleIdentifier == claudeBundleID { return true }
+            if NSWorkspace.shared.frontmostApplication?.bundleIdentifier == target.bundleID { return true }
             try? await Task.sleep(for: .milliseconds(200))
         }
         return false
     }
 
-    /// Invoke Claude's Paste menu item once instead of synthesizing keyboard events.
-    private static func pasteImage() -> Bool {
-        guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: claudeBundleID).first else { return false }
+    /// Invoke the app's Paste menu item once instead of synthesizing keyboard events.
+    private static func pasteImage(into target: SendTarget) -> Bool {
+        guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: target.bundleID).first else { return false }
         let application = AXUIElementCreateApplication(app.processIdentifier)
         var menuBar: CFTypeRef?
         guard AXUIElementCopyAttributeValue(application, kAXMenuBarAttribute as CFString, &menuBar) == .success,

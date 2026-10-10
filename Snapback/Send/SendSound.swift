@@ -1,6 +1,6 @@
 import AppKit
 
-/// The sound played when a capture lands in Claude or on the clipboard: SND01 "sine" by Yasuhiro Tsuchiya (https://snd.dev), used unmodified.
+/// The sound played when a capture lands in Claude or Codex, or on the clipboard: SND01 "sine" by Yasuhiro Tsuchiya (https://snd.dev), used unmodified.
 enum SendSound: String, CaseIterable, Identifiable {
     case off
     case button

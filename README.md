@@ -10,10 +10,10 @@ Snapback is a macOS menu bar app for giving visual feedback to Claude Code. Pres
 
 Download the latest `Snapback-x.y.z.dmg` from [Releases](https://github.com/jonathan-oralart/snapback/releases/latest), open it and drag Snapback to Applications. It updates itself.
 
-Requires macOS 26.4 and the [Claude desktop app](https://claude.ai/download). On first launch Snapback asks for:
+Requires macOS 26.4 and the [Claude desktop app](https://claude.ai/download), or the Codex app if you choose to send there in Settings. On first launch Snapback asks for:
 
 - **Screen Recording**, to capture the front window or record the screen.
-- **Accessibility**, to paste the screenshot into Claude.
+- **Accessibility**, to paste the screenshot into Claude or Codex.
 
 ## Use
 
@@ -26,7 +26,7 @@ Requires macOS 26.4 and the [Claude desktop app](https://claude.ai/download). On
 | Marker size | − and + |
 | Delete a marker | Select it, then ⌫ |
 | Older / newer capture | , and . |
-| Send to Claude | ⌘↩ |
+| Send to Claude or Codex | ⌘↩ |
 | Copy the annotated image | ⌘C |
 | Close and save | Esc, or click outside the screenshot |
 | Close without saving | ⌘⌫ |
