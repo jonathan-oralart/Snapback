@@ -1,7 +1,7 @@
 import AppKit
 
 /// Menu bar apps don't reliably come to the front when they open a window: activation can be
-/// refused, or the window lands behind the app you were in. While one of Snapback's windows is open
+/// refused, or the window lands behind the app you were in. While one of Show & Tell's windows is open
 /// it runs as a regular app (Dock icon, ⌘Tab), which makes activation reliable; once they're all
 /// closed it goes back to menu-bar-only.
 enum AppWindows {

@@ -17,7 +17,7 @@ struct ScreenRecording {
 
 struct NotRecording: Error {}
 
-/// Records the front window's display to a temporary movie, with the pointer and without Snapback's own windows,
+/// Records the front window's display to a temporary movie, with the pointer and without Show & Tell's own windows,
 /// so the stop pill never shows up in it. Clicks are logged rather than recorded, to be drawn onto the frames picked.
 @Observable
 final class ScreenRecorder {
@@ -46,7 +46,7 @@ final class ScreenRecorder {
     @ObservationIgnored private var pressed: [Int: Int] = [:]
 
     /// `beforeCapture` is called with the display's screen just before recording begins, and returns the window
-    /// it showed there (the stop pill), which is waited for so Snapback can be left out of the recording.
+    /// it showed there (the stop pill), which is waited for so Show & Tell can be left out of the recording.
     func start(beforeCapture: (NSScreen) -> CGWindowID) async throws {
         guard !isRecording else { return }
         isRecording = true
@@ -94,7 +94,7 @@ final class ScreenRecorder {
 
         let screen = screen(of: display)
         let ownWindow = beforeCapture(screen)
-        // Snapback is only listed while it has a window on screen, and a new window takes a moment to be listed.
+        // Show & Tell is only listed while it has a window on screen, and a new window takes a moment to be listed.
         var ownApp: [SCRunningApplication] = []
         for _ in 0..<40 {
             let latest = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
@@ -113,7 +113,7 @@ final class ScreenRecorder {
         config.minimumFrameInterval = CMTime(value: 1, timescale: 60)
         config.captureResolution = .best
 
-        let url = FileManager.default.temporaryDirectory.appending(path: "Snapback-\(UUID().uuidString).mov")
+        let url = FileManager.default.temporaryDirectory.appending(path: "ShowAndTell-\(UUID().uuidString).mov")
         let outputConfig = SCRecordingOutputConfiguration()
         outputConfig.outputURL = url
         outputConfig.outputFileType = .mov
@@ -137,7 +137,7 @@ final class ScreenRecorder {
         )
         clicks = []
         pressed = [:]
-        // Clicks on Snapback's own windows, like the stop pill, aren't seen here.
+        // Clicks on Show & Tell's own windows, like the stop pill, aren't seen here.
         let displayFrame = display.frame
         let events: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown, .otherMouseDown, .leftMouseUp, .rightMouseUp, .otherMouseUp]
         let clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: events) { [weak self] event in

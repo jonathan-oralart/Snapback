@@ -11,7 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         #endif
     }
 
-    /// Opening Snapback again while it's running (Finder, Spotlight) shows Settings, since the menu bar
+    /// Opening Show & Tell again while it's running (Finder, Spotlight) shows Settings, since the menu bar
     /// icon can be hidden by the notch or a menu bar manager and opening would otherwise seem to do nothing.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
         if !hasVisibleWindows {

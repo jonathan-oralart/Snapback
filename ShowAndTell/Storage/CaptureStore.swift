@@ -79,7 +79,7 @@ final class CaptureStore {
 
     private init() {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        root = support.appending(path: "Snapback/Captures", directoryHint: .isDirectory)
+        root = support.appending(path: "Show & Tell/Captures", directoryHint: .isDirectory)
         try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         load()
     }

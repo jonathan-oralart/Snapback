@@ -115,7 +115,7 @@ enum SettingsWindow {
             return
         }
         let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView()))
-        window.title = "Snapback Settings"
+        window.title = "Show & Tell Settings"
         window.styleMask = [.titled, .closable]
         window.isReleasedWhenClosed = false
         window.center()

@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "123579866E673A2B4DCAAAFE"
-               BuildableName = "Snapback.app"
-               BlueprintName = "Snapback"
-               ReferencedContainer = "container:Snapback.xcodeproj">
+               BlueprintIdentifier = "A63C5B3AAB0AC19E735E8FA2"
+               BuildableName = "ShowAndTell.app"
+               BlueprintName = "ShowAndTell"
+               ReferencedContainer = "container:ShowAndTell.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,10 +32,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "123579866E673A2B4DCAAAFE"
-            BuildableName = "Snapback.app"
-            BlueprintName = "Snapback"
-            ReferencedContainer = "container:Snapback.xcodeproj">
+            BlueprintIdentifier = "A63C5B3AAB0AC19E735E8FA2"
+            BuildableName = "ShowAndTell.app"
+            BlueprintName = "ShowAndTell"
+            ReferencedContainer = "container:ShowAndTell.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -55,10 +55,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "123579866E673A2B4DCAAAFE"
-            BuildableName = "Snapback.app"
-            BlueprintName = "Snapback"
-            ReferencedContainer = "container:Snapback.xcodeproj">
+            BlueprintIdentifier = "A63C5B3AAB0AC19E735E8FA2"
+            BuildableName = "ShowAndTell.app"
+            BlueprintName = "ShowAndTell"
+            ReferencedContainer = "container:ShowAndTell.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -74,10 +74,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "123579866E673A2B4DCAAAFE"
-            BuildableName = "Snapback.app"
-            BlueprintName = "Snapback"
-            ReferencedContainer = "container:Snapback.xcodeproj">
+            BlueprintIdentifier = "A63C5B3AAB0AC19E735E8FA2"
+            BuildableName = "ShowAndTell.app"
+            BlueprintName = "ShowAndTell"
+            ReferencedContainer = "container:ShowAndTell.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

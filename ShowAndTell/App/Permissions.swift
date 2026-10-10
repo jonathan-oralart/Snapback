@@ -3,7 +3,7 @@ import ApplicationServices
 import PermissionFlow
 import SwiftUI
 
-/// What Snapback needs from macOS: capture to see the window, Accessibility to tell which window is in front and to focus Claude's or Codex's message box.
+/// What Show & Tell needs from macOS: capture to see the window, Accessibility to tell which window is in front and to focus Claude's or Codex's message box.
 enum Permission: CaseIterable, Identifiable {
     case screenRecording
     case accessibility
@@ -33,7 +33,7 @@ enum Permission: CaseIterable, Identifiable {
 
     static var allGranted: Bool { allCases.allSatisfy(\.isGranted) }
 
-    /// The System Settings list PermissionFlow opens, with a panel to drag Snapback into it.
+    /// The System Settings list PermissionFlow opens, with a panel to drag Show & Tell into it.
     var flowPane: PermissionFlowPane {
         switch self {
         case .screenRecording: .screenRecording
@@ -49,7 +49,7 @@ enum PermissionsWindow {
         guard !Permission.allGranted else { return }
         if window == nil {
             let window = NSWindow(contentViewController: NSHostingController(rootView: PermissionsView()))
-            window.title = "Snapback Permissions"
+            window.title = "Show & Tell Permissions"
             window.styleMask = [.titled, .closable]
             window.isReleasedWhenClosed = false
             window.center()
@@ -66,7 +66,7 @@ enum PermissionsWindow {
 private struct PermissionsView: View {
     @State private var granted: [Permission: Bool] = [:]
     @State private var requestedScreenRecording = false
-    /// Opens the right System Settings list beside a small panel you drag Snapback from into the list.
+    /// Opens the right System Settings list beside a small panel you drag Show & Tell from into the list.
     @StateObject private var flow = PermissionFlow.makeController()
 
     var body: some View {

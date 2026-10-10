@@ -7,53 +7,53 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		78A9B9B5D01750ACEDD33817 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 947E5678A2F7C61C984BDFBA /* KeyboardShortcuts */; };
-		A183B7F2E8B8CD8C6641BAA4 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 4787278A15ACDD78A7D4DD5B /* Sparkle */; };
-		C62A1D0932927CA055366D8B /* PermissionFlow in Frameworks */ = {isa = PBXBuildFile; productRef = D23BD770418C835CB4BC5149 /* PermissionFlow */; };
+		4352570E2F2B848AA225DFC9 /* PermissionFlow in Frameworks */ = {isa = PBXBuildFile; productRef = 1464F9508436E094B6FD0044 /* PermissionFlow */; };
+		C2B61293D9320D450365326E /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 2C59AA8C1E8DDF0C362EE8FA /* KeyboardShortcuts */; };
+		F92F6B75643D7C5682EEC9EF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 7F4F612B624E9D4DBCEEF7DA /* Sparkle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		BB408EC3FAF42A462370021B /* Snapback.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Snapback.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F60EC059CD211A9160C8D17E /* ShowAndTell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShowAndTell.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		D48237EF8744B32882191A07 /* Snapback */ = {
+		2D4553BDBC39CF51F99C4B3D /* ShowAndTell */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			explicitFileTypes = {
 			};
 			explicitFolders = (
 			);
-			path = Snapback;
+			path = ShowAndTell;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		CF83EF7D52FFED165DB1F072 /* Frameworks */ = {
+		05D9CFCE746A767E129B0BBE /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78A9B9B5D01750ACEDD33817 /* KeyboardShortcuts in Frameworks */,
-				A183B7F2E8B8CD8C6641BAA4 /* Sparkle in Frameworks */,
-				C62A1D0932927CA055366D8B /* PermissionFlow in Frameworks */,
+				C2B61293D9320D450365326E /* KeyboardShortcuts in Frameworks */,
+				F92F6B75643D7C5682EEC9EF /* Sparkle in Frameworks */,
+				4352570E2F2B848AA225DFC9 /* PermissionFlow in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		01BCBC771C650149F6FA97B4 = {
+		25154A9D15A91B3140175C6D = {
 			isa = PBXGroup;
 			children = (
-				D48237EF8744B32882191A07 /* Snapback */,
-				06C14804592EC3F0568C4B80 /* Products */,
+				2D4553BDBC39CF51F99C4B3D /* ShowAndTell */,
+				51FEDCCADBD5578B7E192E01 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		06C14804592EC3F0568C4B80 /* Products */ = {
+		51FEDCCADBD5578B7E192E01 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				BB408EC3FAF42A462370021B /* Snapback.app */,
+				F60EC059CD211A9160C8D17E /* ShowAndTell.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -61,72 +61,72 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		123579866E673A2B4DCAAAFE /* Snapback */ = {
+		A63C5B3AAB0AC19E735E8FA2 /* ShowAndTell */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = BF42E3CC021921DAC0803DA9 /* Build configuration list for PBXNativeTarget "Snapback" */;
+			buildConfigurationList = EA64208FFBC6E2E94F6375C2 /* Build configuration list for PBXNativeTarget "ShowAndTell" */;
 			buildPhases = (
-				79DB85264ED54CC64676E120 /* Sources */,
-				19FD93FE9A5B4EC97958E9F0 /* Resources */,
-				CF83EF7D52FFED165DB1F072 /* Frameworks */,
+				E80717E53EE0FA09D4919856 /* Sources */,
+				6585131C0C24DC8BE407171B /* Resources */,
+				05D9CFCE746A767E129B0BBE /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				D48237EF8744B32882191A07 /* Snapback */,
+				2D4553BDBC39CF51F99C4B3D /* ShowAndTell */,
 			);
-			name = Snapback;
+			name = ShowAndTell;
 			packageProductDependencies = (
-				947E5678A2F7C61C984BDFBA /* KeyboardShortcuts */,
-				4787278A15ACDD78A7D4DD5B /* Sparkle */,
-				D23BD770418C835CB4BC5149 /* PermissionFlow */,
+				2C59AA8C1E8DDF0C362EE8FA /* KeyboardShortcuts */,
+				7F4F612B624E9D4DBCEEF7DA /* Sparkle */,
+				1464F9508436E094B6FD0044 /* PermissionFlow */,
 			);
-			productName = Snapback;
-			productReference = BB408EC3FAF42A462370021B /* Snapback.app */;
+			productName = ShowAndTell;
+			productReference = F60EC059CD211A9160C8D17E /* ShowAndTell.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		3826A283E4753BAC807346EA /* Project object */ = {
+		A88D62A9F1DAA7589FE93C4E /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
-					123579866E673A2B4DCAAAFE = {
+					A63C5B3AAB0AC19E735E8FA2 = {
 						DevelopmentTeam = XB5U87PMF7;
 						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = 93D6EDE0D0DA5D4ACDD1EB9F /* Build configuration list for PBXProject "Snapback" */;
+			buildConfigurationList = AFD7174D2186464660B51140 /* Build configuration list for PBXProject "ShowAndTell" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
 				en,
 			);
-			mainGroup = 01BCBC771C650149F6FA97B4;
+			mainGroup = 25154A9D15A91B3140175C6D;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				D405884F7027A9D3240ACFA6 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
-				4B30AB535BAE970DF3A285B3 /* XCRemoteSwiftPackageReference "PermissionFlow" */,
-				035170B9210E5D19EE465362 /* XCRemoteSwiftPackageReference "Sparkle" */,
+				6B861DED7A6EE75BA648D0C7 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+				C40E1D4EBA97C6AAD145787B /* XCRemoteSwiftPackageReference "PermissionFlow" */,
+				BE5E32200F2FB26E0C7DD6CE /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 06C14804592EC3F0568C4B80 /* Products */;
+			productRefGroup = 51FEDCCADBD5578B7E192E01 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				123579866E673A2B4DCAAAFE /* Snapback */,
+				A63C5B3AAB0AC19E735E8FA2 /* ShowAndTell */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		19FD93FE9A5B4EC97958E9F0 /* Resources */ = {
+		6585131C0C24DC8BE407171B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -136,7 +136,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		79DB85264ED54CC64676E120 /* Sources */ = {
+		E80717E53EE0FA09D4919856 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -146,10 +146,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		00E4CD31AAEA751E16C252E7 /* Debug */ = {
+		66A1F420116829503811298A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -157,7 +157,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Snapback Dev";
+				INFOPLIST_KEY_CFBundleDisplayName = "Show & Tell";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -166,72 +166,18 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.oralart.snapback.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oralart.showandtell;
+				PRODUCT_MODULE_NAME = ShowAndTell;
+				PRODUCT_NAME = "Show & Tell";
 				SDKROOT = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 			};
-			name = Debug;
-		};
-		400E86FA84F584AD0C2A165B /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.4;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				MTL_FAST_MATH = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 5.0;
-			};
 			name = Release;
 		};
-		4AEB3E8F1F1463F2DC314F23 /* Debug */ = {
+		C0A5A16BC3C0EF579D9FBABC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -294,10 +240,66 @@
 			};
 			name = Debug;
 		};
-		E7A706B1A8E5791636D47BEE /* Release */ = {
+		C1706FC9ABBBE4294C1A63F3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		FA7A4AB3F66291282CEE2692 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -305,7 +307,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Snapback;
+				INFOPLIST_KEY_CFBundleDisplayName = "Show & Tell Dev";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -314,32 +316,34 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.oralart.snapback;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oralart.showandtell.dev;
+				PRODUCT_MODULE_NAME = ShowAndTell;
+				PRODUCT_NAME = "Show & Tell";
 				SDKROOT = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 			};
-			name = Release;
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		93D6EDE0D0DA5D4ACDD1EB9F /* Build configuration list for PBXProject "Snapback" */ = {
+		AFD7174D2186464660B51140 /* Build configuration list for PBXProject "ShowAndTell" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				4AEB3E8F1F1463F2DC314F23 /* Debug */,
-				400E86FA84F584AD0C2A165B /* Release */,
+				C0A5A16BC3C0EF579D9FBABC /* Debug */,
+				C1706FC9ABBBE4294C1A63F3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		BF42E3CC021921DAC0803DA9 /* Build configuration list for PBXNativeTarget "Snapback" */ = {
+		EA64208FFBC6E2E94F6375C2 /* Build configuration list for PBXNativeTarget "ShowAndTell" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				00E4CD31AAEA751E16C252E7 /* Debug */,
-				E7A706B1A8E5791636D47BEE /* Release */,
+				FA7A4AB3F66291282CEE2692 /* Debug */,
+				66A1F420116829503811298A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -347,23 +351,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		035170B9210E5D19EE465362 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sparkle-project/Sparkle";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.6.0;
-			};
-		};
-		4B30AB535BAE970DF3A285B3 /* XCRemoteSwiftPackageReference "PermissionFlow" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/jaywcjlove/PermissionFlow";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
-		D405884F7027A9D3240ACFA6 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+		6B861DED7A6EE75BA648D0C7 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
 			requirement = {
@@ -371,25 +359,41 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		BE5E32200F2FB26E0C7DD6CE /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
+		C40E1D4EBA97C6AAD145787B /* XCRemoteSwiftPackageReference "PermissionFlow" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/jaywcjlove/PermissionFlow";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4787278A15ACDD78A7D4DD5B /* Sparkle */ = {
+		1464F9508436E094B6FD0044 /* PermissionFlow */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 035170B9210E5D19EE465362 /* XCRemoteSwiftPackageReference "Sparkle" */;
-			productName = Sparkle;
+			package = C40E1D4EBA97C6AAD145787B /* XCRemoteSwiftPackageReference "PermissionFlow" */;
+			productName = PermissionFlow;
 		};
-		947E5678A2F7C61C984BDFBA /* KeyboardShortcuts */ = {
+		2C59AA8C1E8DDF0C362EE8FA /* KeyboardShortcuts */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D405884F7027A9D3240ACFA6 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			package = 6B861DED7A6EE75BA648D0C7 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
 			productName = KeyboardShortcuts;
 		};
-		D23BD770418C835CB4BC5149 /* PermissionFlow */ = {
+		7F4F612B624E9D4DBCEEF7DA /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 4B30AB535BAE970DF3A285B3 /* XCRemoteSwiftPackageReference "PermissionFlow" */;
-			productName = PermissionFlow;
+			package = BE5E32200F2FB26E0C7DD6CE /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = 3826A283E4753BAC807346EA /* Project object */;
+	rootObject = A88D62A9F1DAA7589FE93C4E /* Project object */;
 }

@@ -21,7 +21,7 @@
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUFeedURL</key>
-	<string>https://github.com/jonathan-oralart/snapback/releases/latest/download/appcast.xml</string>
+	<string>https://github.com/jonathan-oralart/show-and-tell/releases/latest/download/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>Ob3MTl0a7pNAqP09JwDWyTsCV2XfUBY83sxPpCmJa0M=</string>
 </dict>

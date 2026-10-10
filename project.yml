@@ -1,4 +1,4 @@
-name: Snapback
+name: ShowAndTell
 options:
   minimumXcodeGenVersion: 2.45.4
   xcodeVersion: "26.4"
@@ -17,11 +17,11 @@ packages:
     url: https://github.com/jaywcjlove/PermissionFlow
     from: 1.0.0
 targets:
-  Snapback:
+  ShowAndTell:
     type: application
     platform: macOS
     sources:
-      - path: Snapback
+      - path: ShowAndTell
         type: syncedFolder
     dependencies:
       - package: KeyboardShortcuts
@@ -32,7 +32,7 @@ targets:
       properties:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        SUFeedURL: https://github.com/jonathan-oralart/snapback/releases/latest/download/appcast.xml
+        SUFeedURL: https://github.com/jonathan-oralart/show-and-tell/releases/latest/download/appcast.xml
         SUPublicEDKey: Ob3MTl0a7pNAqP09JwDWyTsCV2XfUBY83sxPpCmJa0M=
         SUEnableAutomaticChecks: true
     settings:
@@ -43,12 +43,14 @@ targets:
         DEVELOPMENT_TEAM: XB5U87PMF7
         ENABLE_HARDENED_RUNTIME: YES
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: Snapback
+        INFOPLIST_KEY_CFBundleDisplayName: Show & Tell
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSHumanReadableCopyright: ""
         MARKETING_VERSION: 0.1
-        PRODUCT_BUNDLE_IDENTIFIER: com.oralart.snapback
+        PRODUCT_NAME: "Show & Tell"
+        PRODUCT_MODULE_NAME: ShowAndTell
+        PRODUCT_BUNDLE_IDENTIFIER: com.oralart.showandtell
         SWIFT_APPROACHABLE_CONCURRENCY: YES
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: YES
@@ -56,14 +58,14 @@ targets:
       configs:
         # A separate app for development, so its permission grants and settings never mix with a release install.
         Debug:
-          PRODUCT_BUNDLE_IDENTIFIER: com.oralart.snapback.dev
-          INFOPLIST_KEY_CFBundleDisplayName: Snapback Dev
+          PRODUCT_BUNDLE_IDENTIFIER: com.oralart.showandtell.dev
+          INFOPLIST_KEY_CFBundleDisplayName: Show & Tell Dev
           ASSETCATALOG_COMPILER_APPICON_NAME: AppIconDev
 schemes:
-  Snapback:
+  ShowAndTell:
     build:
       targets:
-        Snapback: all
+        ShowAndTell: all
     run:
       config: Debug
     archive:

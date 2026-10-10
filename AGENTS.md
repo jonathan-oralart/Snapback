@@ -1,10 +1,10 @@
 # Agent Instructions
 
-Snapback is a menu bar app: press a shortcut, annotate the front window with numbered pins and boxes, copy it as one image and switch to Claude (or Codex) to paste it in (notes are drawn into it, not sent as text). Keep one implementation, no fallbacks unless asked, no tests unless asked.
+Show & Tell is a menu bar app: press a shortcut, annotate the front window with numbered pins and boxes, copy it as one image and switch to Claude (or Codex) to paste it in (notes are drawn into it, not sent as text). Keep one implementation, no fallbacks unless asked, no tests unless asked.
 
 ## Builds
 
-Test by hand; screen automation is unreliable with the overlay. Build, install and relaunch with `scripts/dev.sh`. It installs the Debug build as `/Applications/Snapback Dev.app` (bundle ID `com.oralart.snapback.dev`, the user's day-to-day copy) and relaunches it. Writing to /Applications needs the sandbox off.
+Test by hand; screen automation is unreliable with the overlay. Build, install and relaunch with `scripts/dev.sh`. It installs the Debug build as `/Applications/Show & Tell Dev.app` (bundle ID `com.oralart.showandtell.dev`, the user's day-to-day copy) and relaunches it. Writing to /Applications needs the sandbox off.
 
 Keep Apple Development signing and the separate Debug bundle ID: Screen Recording and Accessibility grants are tied to the signature, so they survive rebuilds but break if a release and a dev build share an ID.
 
@@ -24,13 +24,13 @@ Push main with `scripts/push.sh`, not `git push`: it pushes, then releases the n
 
 ## App icon
 
-`Snapback/AppIcon.icon` is an Icon Composer icon: the background colour is the `fill` in its `icon.json`, and the artwork layers are drawn by `Icon/render-icon.swift` (run command at the top of that file). Edit the script and re-run it rather than editing the PNGs. The Debug build uses `Snapback/AppIconDev.icon`, the same artwork on orange; the script writes both.
+`ShowAndTell/AppIcon.icon` is an Icon Composer icon: the background colour is the `fill` in its `icon.json`, and the artwork layers are drawn by `Icon/render-icon.swift` (run command at the top of that file). Edit the script and re-run it rather than editing the PNGs. The Debug build uses `ShowAndTell/AppIconDev.icon`, the same artwork on orange; the script writes both.
 
 ## Architecture
 
 - `App`: entry point and menu, shortcut, permissions window, `AppWindows` (open windows through it so they come to the front), and `CaptureCoordinator` (capture → overlay → save/copy).
-- `Capture`: front window capture with ScreenCaptureKit, and `ScreenRecorder`, which records the front window's display to a temporary HEVC movie (pointer shown, Snapback's own windows such as the stop pill left out, 60s limit). Clicks are logged alongside it, not recorded; `Recording` draws them as white rings onto the frames decoded from it, filled while held and hollow once let go. To check their timing, record `scripts/click-calibration.html` in a browser; the steps are on the page.
+- `Capture`: front window capture with ScreenCaptureKit, and `ScreenRecorder`, which records the front window's display to a temporary HEVC movie (pointer shown, Show & Tell's own windows such as the stop pill left out, 60s limit). Clicks are logged alongside it, not recorded; `Recording` draws them as white rings onto the frames decoded from it, filled while held and hollow once let go. To check their timing, record `scripts/click-calibration.html` in a browser; the steps are on the page.
 - `Overlay`: `Marker` and `AnnotationSession` (frames, crop, selection, undo), `MarkerStyle` (marker drawing, shared with the image), the overlay view, note bubble, toolbar and panel. A screenshot is one frame; a recording (`Recording`: frame times and exact frame decoding) has up to six kept frames, picked on `RecordingTimeline`, with markers numbered across them.
 - `Output`: `FeedbackImage` renders the PNG that's sent: shadowed window (or a recording's frames in a grid) with markers, notes in a card underneath.
 - `Send`: copies the image to the clipboard, plays the sound chosen in Settings, shows `CopiedToast` (`UI`), and for Copy & Open brings Claude's or Codex's window (`SendTarget`, chosen in Settings) to the front as it is (no new chat) and focuses its message box through Accessibility; the user pastes it. The sounds are SND01 "sine" from snd.dev; keep the files unmodified (their terms).
-- `Storage`: the last 20 sent or saved captures in `~/Library/Application Support/Snapback/Captures`, reopened from the menu's Recent submenu or the history window (`UI`). `capture.json` stores markers as `{kind, rect, note}`; keep that format readable. A recording keeps `recording.mov` instead of `window.png`, and its crop, frames (exact movie times) and clicks in `capture.json`.
+- `Storage`: the last 20 sent or saved captures in `~/Library/Application Support/Show & Tell/Captures`, reopened from the menu's Recent submenu or the history window (`UI`). `capture.json` stores markers as `{kind, rect, note}`; keep that format readable. A recording keeps `recording.mov` instead of `window.png`, and its crop, frames (exact movie times) and clicks in `capture.json`.

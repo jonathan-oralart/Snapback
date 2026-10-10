@@ -1,19 +1,19 @@
 #!/bin/zsh
-# Prepares a README demo take for CleanShot X. Start its recording, activate Snapback with the real
+# Prepares a README demo take for CleanShot X. Start its recording, activate Show & Tell with the real
 # capture shortcut, click Copy & Open Claude, paste with ⌘V, verify the image, and submit it. The page reloads after Claude edits it.
 #
 #   scripts/record-demo.sh <name> --serve       serve the separate demo repo, open the page and lay out the windows (leave it running)
 #   scripts/record-demo.sh <name> --save-take   save your latest capture's markers as the take to replay
 #   scripts/record-demo.sh <name>               arm and guide a take (CleanShot records separately)
 #
-# Once: install Snapback Dev with scripts/dev.sh and run --serve; the page must come from it, not a file, to reload
-# itself. Then mark the page up once by hand with Snapback Dev and run --save-take.
+# Once: install Show & Tell Dev with scripts/dev.sh and run --serve; the page must come from it, not a file, to reload
+# itself. Then mark the page up once by hand with Show & Tell Dev and run --save-take.
 #
 # DEMO_DIR defaults to ../snapback-demo (a separate Git repo with index.html); PORT defaults to 8766.
 # Select this folder in Claude once, before recording. Submit only the attached image, without a text prompt.
 # Every take puts Claude in the left half of LAYOUT and the page in the right, with space around and between the windows. Record the display below the menu bar in CleanShot.
 # LAYOUT=x,y,w,h (points from the top left of the main display; default up to 1224×700, centred on screen);
-# BROWSER defaults to Google Chrome. Snapback only switches to Claude, so have a new Claude Code session open
+# BROWSER defaults to Google Chrome. Show & Tell only switches to Claude, so have a new Claude Code session open
 # in the demo folder before the take. Refuses uncommitted demo changes; restore the demo yourself before a repeat take.
 set -euo pipefail
 zmodload zsh/datetime
@@ -37,14 +37,14 @@ if [[ -z ${LAYOUT:-} ]]; then
 fi
 mkdir -p "$OUT"
 
-# Asks Snapback Dev to lay out the windows and, given a take, play it.
+# Asks Show & Tell Dev to lay out the windows and, given a take, play it.
 post() {
   rm -f "$TIMES"
   osascript -l JavaScript - "$LAYOUT" "$BROWSER" "$TITLE" "${1:-}" "$TIMES" <<'JS'
 ObjC.import("Foundation")
 function run([layout, browser, title, take, times]) {
   $.NSDistributedNotificationCenter.defaultCenter.postNotificationNameObjectUserInfoDeliverImmediately(
-    "com.oralart.snapback.dev.take", "record-demo", $({ layout, browser, title, take, times }), true)
+    "com.oralart.showandtell.dev.take", "record-demo", $({ layout, browser, title, take, times }), true)
 }
 JS
 }
@@ -53,14 +53,14 @@ wait_for() {  # wait_for <seconds> <what> <condition…>
   local deadline=$(( EPOCHREALTIME + $1 )) what=$2; shift 2
   until "$@"; do
     if grep -q '^failed ' "$TIMES" 2>/dev/null; then
-      echo "Snapback: $(sed -n 's/^failed \(.*\) [0-9.]*$/\1/p' "$TIMES")" >&2; exit 1
+      echo "Show & Tell: $(sed -n 's/^failed \(.*\) [0-9.]*$/\1/p' "$TIMES")" >&2; exit 1
     fi
     (( EPOCHREALTIME < deadline )) || { echo "Timed out: $what" >&2; exit 1; }
     sleep 0.25
   done
 }
 logged() { grep -q "^$1 " "$TIMES" 2>/dev/null; }
-NOT_RUNNING="Snapback Dev didn't answer; is it running? (scripts/dev.sh)"
+NOT_RUNNING="Show & Tell Dev didn't answer; is it running? (scripts/dev.sh)"
 
 cleanup() {
   [[ -n ${SERVER:-} ]] && kill $SERVER 2>/dev/null
@@ -94,7 +94,7 @@ if [[ ${2:-} == --serve ]]; then
 fi
 
 if [[ ${2:-} == --save-take ]]; then
-  latest=$(ls -t "$HOME/Library/Application Support/Snapback/Captures"/*/capture.json | head -1)
+  latest=$(ls -t "$HOME/Library/Application Support/Show & Tell/Captures"/*/capture.json | head -1)
   mkdir -p "${TAKE:h}"
   jq '{windowSize: .frame[1], markers}' "$latest" > "$TAKE"
   echo "Saved $(jq '.markers | length' "$TAKE") markers to $TAKE"
@@ -112,10 +112,10 @@ original=$(stat -f %Fm "$PAGE")
 # Arm the take before recording, so setup never appears in the video.
 post "$TAKE"
 wait_for 3 "$NOT_RUNNING" logged armed
-echo "Start CleanShot recording with clicks and keystrokes enabled, then press Snapback’s capture shortcut (default ⇧⌘2)."
-wait_for 130 "Snapback wasn't activated" logged start
+echo "Start CleanShot recording with clicks and keystrokes enabled, then press Show & Tell’s capture shortcut (default ⇧⌘2)."
+wait_for 130 "Show & Tell wasn't activated" logged start
 wait_for 30 "the annotation didn't finish" logged annotated
-echo "Click Copy & Open Claude in Snapback’s toolbar."
+echo "Click Copy & Open Claude in Show & Tell’s toolbar."
 wait_for 90 "the take didn't finish" logged ready
 echo "Paste the image into Claude with ⌘V, verify it, then submit it. Recording until the demo page changes…"
 

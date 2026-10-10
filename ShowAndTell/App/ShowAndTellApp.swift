@@ -3,7 +3,7 @@ import Sparkle
 import SwiftUI
 
 @main
-struct SnapbackApp: App {
+struct ShowAndTellApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     /// Checks GitHub Releases for new versions. Off in debug builds, so a development build isn't replaced by a release.
     private let updater = SPUStandardUpdaterController(startingUpdater: !isDebugBuild, updaterDelegate: nil, userDriverDelegate: nil)
@@ -23,7 +23,7 @@ struct SnapbackApp: App {
         } label: {
             Image(nsImage: menuBarIcon)
         }
-        Window("Snapback History", id: "history") {
+        Window("Show & Tell History", id: "history") {
             HistoryView()
         }
         .defaultSize(width: 760, height: 540)
@@ -70,7 +70,7 @@ private struct MenuContent: View {
             SettingsWindow.show()
         }
         .keyboardShortcut(",")
-        Button("Quit Snapback") {
+        Button("Quit Show & Tell") {
             NSApp.terminate(nil)
         }
         .keyboardShortcut("q")

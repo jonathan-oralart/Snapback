@@ -78,7 +78,7 @@ final class CaptureCoordinator {
         Task {
             var pill: RecordingPill?
             do {
-                // The pill is up before recording starts, so Snapback has a window on screen to leave out of it.
+                // The pill is up before recording starts, so Show & Tell has a window on screen to leave out of it.
                 try await recorder.start { [weak self] screen in
                     let shown = RecordingPill(screen: screen, started: .now) { self?.stopRecording() }
                     shown.orderFrontRegardless()

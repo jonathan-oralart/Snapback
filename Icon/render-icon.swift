@@ -1,4 +1,4 @@
-// Draws the app icon's layers into Snapback/AppIcon.icon/Assets and the dev build's Snapback/AppIconDev.icon/Assets.
+// Draws the app icon's layers into ShowAndTell/AppIcon.icon/Assets and the dev build's ShowAndTell/AppIconDev.icon/Assets.
 // Run from the repo root: swiftc -parse-as-library -default-isolation MainActor -o /tmp/render-icon Icon/render-icon.swift && /tmp/render-icon
 // The icon's background colour is the `fill` in each icon's icon.json (orange for the dev build).
 import AppKit
@@ -68,7 +68,7 @@ func render(_ layer: some View, to name: String) throws {
     renderer.scale = 1024 / 824
     let png = NSBitmapImageRep(cgImage: renderer.cgImage!).representation(using: .png, properties: [:])!
     for icon in ["AppIcon", "AppIconDev"] {
-        try png.write(to: URL(filePath: "Snapback/\(icon).icon/Assets/\(name).png"))
+        try png.write(to: URL(filePath: "ShowAndTell/\(icon).icon/Assets/\(name).png"))
     }
 }
 

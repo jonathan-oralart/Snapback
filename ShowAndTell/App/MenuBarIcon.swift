@@ -20,6 +20,6 @@ let menuBarIcon: NSImage = {
         return true
     }
     image.isTemplate = true
-    image.accessibilityDescription = "Snapback"
+    image.accessibilityDescription = "Show & Tell"
     return image
 }()

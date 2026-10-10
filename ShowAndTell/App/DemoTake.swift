@@ -6,7 +6,7 @@ import AppKit
 /// capture of the page through the real annotation session. The operator clicks Copy & Open Claude,
 /// pastes the image with ⌘V and submits it.
 enum DemoTake {
-    static let notification = Notification.Name("com.oralart.snapback.dev.take")
+    static let notification = Notification.Name("com.oralart.showandtell.dev.take")
     private static let claudeBundleID = "com.anthropic.claudefordesktop"
 
     /// Where the overlay shows the screenshot, set by `OverlayView`, so window points can be found on screen.
@@ -72,7 +72,7 @@ enum DemoTake {
         shown = nil
         sendButton = nil
         log("armed", to: times)
-        // The operator activates Snapback with its real shortcut, visible in the recording.
+        // The operator activates Show & Tell with its real shortcut, visible in the recording.
         for _ in 0..<1200 where shown == nil || CaptureCoordinator.shared.demoSession == nil {
             try? await Task.sleep(for: .milliseconds(100))
         }
@@ -149,7 +149,7 @@ enum DemoTake {
     // MARK: Windows
 
     /// Puts Claude in the left half of the layout and the page in the right, and brings the page to the front,
-    /// since the capture is of the front window. Done with Accessibility, which Snapback has for finding the front window.
+    /// since the capture is of the front window. Done with Accessibility, which Show & Tell has for finding the front window.
     private static func arrange(_ request: Request) -> Bool {
         let apps = NSWorkspace.shared.runningApplications
         guard let browser = apps.first(where: { $0.localizedName == request.browser }),

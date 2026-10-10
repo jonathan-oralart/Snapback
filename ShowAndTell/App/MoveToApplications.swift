@@ -1,6 +1,6 @@
 import AppKit
 
-/// Snapback can't update itself (or open at login reliably) when it's run straight from the disk image,
+/// Show & Tell can't update itself (or open at login reliably) when it's run straight from the disk image,
 /// or from where macOS runs downloaded apps that weren't moved into place ("App Translocation").
 /// Offers to copy itself into Applications and relaunch from there.
 enum MoveToApplications {
@@ -9,14 +9,14 @@ enum MoveToApplications {
         guard path.hasPrefix("/Volumes/") || path.contains("/AppTranslocation/") else { return }
 
         let alert = NSAlert()
-        alert.messageText = "Move Snapback to Applications?"
+        alert.messageText = "Move Show & Tell to Applications?"
         alert.informativeText = "It's running from the disk image, so it can't update itself."
         alert.addButton(withTitle: "Move to Applications")
         alert.addButton(withTitle: "Not Now")
         NSApp.activate()
         guard alert.runModal() == .alertFirstButtonReturn else { return }
 
-        let destination = URL(filePath: "/Applications/Snapback.app")
+        let destination = URL(filePath: "/Applications/Show & Tell.app")
         do {
             if FileManager.default.fileExists(atPath: destination.path()) {
                 try FileManager.default.trashItem(at: destination, resultingItemURL: nil)
@@ -31,8 +31,8 @@ enum MoveToApplications {
             xattr.waitUntilExit()
         } catch {
             let failure = NSAlert()
-            failure.messageText = "Couldn't move Snapback"
-            failure.informativeText = "Drag Snapback into your Applications folder, then open it from there."
+            failure.messageText = "Couldn't move Show & Tell"
+            failure.informativeText = "Drag Show & Tell into your Applications folder, then open it from there."
             failure.runModal()
             return
         }

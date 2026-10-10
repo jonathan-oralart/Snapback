@@ -1,16 +1,16 @@
-# Snapback: screenshot annotation for Claude Code
+# Show & Tell: screenshot annotation for Claude Code
 
 Point at what's wrong, say why, hand it to Claude.
 
 ![Two annotations sent to Claude as one image, with no extra prompt, fix the title and album artwork](docs/demo.gif)
 
-Snapback is a macOS menu bar app for giving visual feedback to Claude Code. Press a shortcut and it captures the front window; click to drop numbered pins or drag to draw boxes, and write a note for each. Copy & Open Claude copies one image and brings Claude to the front to paste it into (or Codex, chosen in Settings): the screenshot with its markers, and the numbered notes underneath.
+Show & Tell is a macOS menu bar app for giving visual feedback to Claude Code. Press a shortcut and it captures the front window; click to drop numbered pins or drag to draw boxes, and write a note for each. Copy & Open Claude copies one image and brings Claude to the front to paste it into (or Codex, chosen in Settings): the screenshot with its markers, and the numbered notes underneath.
 
 ## Install
 
-Download the latest `Snapback-x.y.z.dmg` from [Releases](https://github.com/jonathan-oralart/snapback/releases/latest), open it and drag Snapback to Applications. It updates itself.
+Download the latest `ShowAndTell-x.y.z.dmg` from [Releases](https://github.com/jonathan-oralart/show-and-tell/releases/latest), open it and drag Show & Tell to Applications. It updates itself.
 
-Requires macOS 26.4 and the [Claude desktop app](https://claude.ai/download), or the Codex app if you choose to send there in Settings. On first launch Snapback asks for:
+Requires macOS 26.4 and the [Claude desktop app](https://claude.ai/download), or the Codex app if you choose to send there in Settings. On first launch Show & Tell asks for:
 
 - **Screen Recording**, to capture the front window or record the screen.
 - **Accessibility**, to find the front window and put the cursor in Claude's or Codex's message box.
@@ -43,12 +43,12 @@ Needs Xcode 26 and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ```sh
 xcodegen generate
-open Snapback.xcodeproj
+open ShowAndTell.xcodeproj
 ```
 
 Set your own team in `project.yml` (`DEVELOPMENT_TEAM`) to sign it.
 
-`scripts/dev.sh` builds, installs and relaunches a separate **Snapback Dev** app, so a development copy keeps its own permissions and settings next to a release install.
+`scripts/dev.sh` builds, installs and relaunches a separate **Show & Tell Dev** app, so a development copy keeps its own permissions and settings next to a release install.
 
 ## Releasing
 
