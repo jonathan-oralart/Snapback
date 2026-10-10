@@ -15,6 +15,9 @@ final class CaptureCoordinator {
     #endif
     /// A capture from history is being opened; recordings take a moment, and steps shouldn't overtake each other.
     private var isNavigating = false
+    /// The new capture the overlay opened with, kept while stepping through history so → can come back to it
+    /// even though it isn't worth saving to Recent.
+    private var draft: AnnotationSession?
 
     /// Does the slow first-time work of a capture at launch, so the first shortcut press opens as fast as later ones:
     /// ScreenCaptureKit's first window list, and laying out an overlay offscreen.
@@ -27,7 +30,7 @@ final class CaptureCoordinator {
         guard let image = context?.makeImage(), let screen = NSScreen.main else { return }
         let capture = CapturedWindow(image: image, frame: CGRect(x: 0, y: 0, width: 1, height: 1), screen: screen,
                                      appName: "", windowTitle: nil)
-        let view = OverlayView(session: AnnotationSession(capture: capture), animatesIn: false,
+        let view = OverlayView(session: AnnotationSession(capture: capture), animatesIn: false, hasDraft: false,
                                onSend: {}, onCopy: {}, onSave: {}, onDiscard: {}, onNavigate: { _ in })
         // Never ordered in, so it's never seen.
         _ = OverlayPanel(screen: screen, content: view)
@@ -93,7 +96,8 @@ final class CaptureCoordinator {
         Task {
             do {
                 let finished = try await ScreenRecorder.shared.stop()
-                let recording = try await Recording.open(finished.url, deletesFile: true)
+                let recording = try await Recording.open(finished.url, clicks: finished.clicks, displaySize: finished.frame.size,
+                                                         deletesFile: true)
                 let time = recording.times[0]
                 let image = try await recording.image(at: time, exact: true).image
                 let display = CapturedWindow(image: image, frame: finished.frame, screen: finished.screen,
@@ -123,6 +127,7 @@ final class CaptureCoordinator {
         let view = OverlayView(
             session: session,
             animatesIn: panel == nil,
+            hasDraft: draft != nil,
             onSend: { [weak self] in self?.close(session, to: .claude) },
             onCopy: { [weak self] in self?.close(session, to: .clipboard) },
             onSave: { [weak self] in self?.close(session, to: .recent) },
@@ -148,15 +153,20 @@ final class CaptureCoordinator {
         // An unsaved capture sits just before the newest saved one.
         let current = session.savedID.flatMap { id in store.captures.firstIndex { $0.id == id } } ?? -1
         let target = current + step
-        guard store.captures.indices.contains(target), !isNavigating else { return }
+        let backToDraft = target == -1 && draft != nil
+        guard store.captures.indices.contains(target) || backToDraft, !isNavigating else { return }
+        let saves = session.hasChanges && session.isWorthSaving
+        // Leaving the new capture: it goes into Recent if it's worth saving, otherwise it's kept here.
+        if session.savedID == nil { draft = saves ? nil : session }
         isNavigating = true
         Task {
             defer { isNavigating = false }
             // Decoding a recording's frames takes a moment; the overlay may have closed meanwhile.
-            guard let next = await store.restore(store.captures[target]), panel != nil else { return }
+            let next = if backToDraft { draft } else { await store.restore(store.captures[target]) }
+            guard let next, panel != nil else { return }
             present(next)
             // Show the next capture first; save the one left behind (only if it changed) once that's on screen.
-            if session.hasChanges && session.isWorthSaving {
+            if saves {
                 await Task.yield()
                 store.save(session, png: FeedbackImage.png(for: session))
             }
@@ -204,5 +214,6 @@ final class CaptureCoordinator {
         #endif
         panel?.orderOut(nil)
         panel = nil
+        draft = nil
     }
 }

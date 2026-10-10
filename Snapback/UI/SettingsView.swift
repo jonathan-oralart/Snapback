@@ -5,8 +5,9 @@ import SwiftUI
 struct SettingsView: View {
     @State private var opensAtLogin = SMAppService.mainApp.status == .enabled
     @AppStorage(SendSound.defaultsKey) private var sendSound = SendSound.button
-
+    #if DEBUG
     @AppStorage(FeedbackImage.TextSize.defaultsKey) private var annotationTextSize = FeedbackImage.TextSize.standard
+    #endif
 
     var body: some View {
         Form {
@@ -34,6 +35,7 @@ struct SettingsView: View {
                 .onChange(of: sendSound) { _, sound in sound.play() }
             }
 
+            #if DEBUG
             Section {
                 Picker("Annotation text size", selection: $annotationTextSize) {
                     ForEach(FeedbackImage.TextSize.allCases, id: \.self) { size in
@@ -41,10 +43,11 @@ struct SettingsView: View {
                     }
                 }
             } header: {
-                Text("Exported image")
+                Text("Exported image (dev build)")
             } footer: {
                 Text("Controls the numbered notes below the screenshot when you send or copy an image.")
             }
+            #endif
 
             Section {
                 KeyboardShortcuts.Recorder("Send to Claude", name: .send, onChange: KeyboardShortcuts.Name.send.takeShortcut)

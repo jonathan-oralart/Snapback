@@ -4,12 +4,17 @@ import AppKit
 /// notes in a card underneath. Everything travels in the one image, so it works wherever an image can be pasted.
 enum FeedbackImage {
     /// Size of the notes embedded below the screenshot, independent of marker size.
+    /// Only the dev build lets you change it; releases always use standard.
     enum TextSize: String, CaseIterable {
         case standard, large, extraLarge
 
         static let defaultsKey = "annotationTextSize"
         static var current: Self {
+            #if DEBUG
             UserDefaults.standard.string(forKey: defaultsKey).flatMap(Self.init(rawValue:)) ?? .standard
+            #else
+            .standard
+            #endif
         }
 
         var title: String {
@@ -30,7 +35,8 @@ enum FeedbackImage {
     }
 
     /// Like a macOS window screenshot: each frame floats on transparent padding with a soft shadow.
-    /// The notes sit in a white card underneath, so they stay readable on any background. With no markers there's no card.
+    /// Frame labels sit on pills matching the Mac's light or dark mode, and notes on white, so they stay readable on any background.
+    /// With no markers there's no card.
     static func png(for session: AnnotationSession) -> Data {
         let frames = session.framesToSend
         let style = session.style
@@ -60,20 +66,26 @@ enum FeedbackImage {
         } ?? 1
         let rows = (frames.count + columns - 1) / columns
 
+        let dark = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
         let labels: [NSAttributedString] = frames.count <= 1 ? [] : frames.enumerated().map { index, frame in
             let seconds = frame.time.map { session.recording?.seconds($0) ?? 0 } ?? 0
             return NSAttributedString(string: "Frame \(index + 1) · \(String(format: "%.2f", seconds))s", attributes: [
                 .font: NSFont.systemFont(ofSize: 14 * scale, weight: .semibold),
-                .foregroundColor: NSColor(white: 0.15, alpha: 1),
+                .foregroundColor: NSColor(white: dark ? 0.92 : 0.15, alpha: 1),
             ])
         }
-        let labelHeight = labels.isEmpty ? 0 : height(of: labels[0], width: tileWidth) + 8 * scale
+        let labelInset = CGSize(width: 8 * scale, height: 3 * scale)
+        let pillHeight = labels.isEmpty ? 0 : height(of: labels[0], width: tileWidth) + labelInset.height * 2
+        let labelHeight = labels.isEmpty ? 0 : pillHeight + 8 * scale
         let gridWidth = CGFloat(columns) * tileWidth + CGFloat(columns - 1) * gap
         let gridHeight = CGFloat(rows) * (labelHeight + tileHeight) + CGFloat(rows - 1) * gap
 
         var explanation = "\(style.tint.name) numbered pins and boxes are feedback markers, not part of the app."
         if frames.count > 1 {
             explanation = "Frames 1–\(frames.count) are stills from one screen recording, in time order. " + explanation
+        }
+        if let recording = session.recording, frames.contains(where: { $0.time.map { !recording.clicks(at: $0).isEmpty } ?? false }) {
+            explanation += " White rings show mouse clicks: filled while the button is held down, hollow where it was let go, dashed for a right click."
         }
         let header = NSAttributedString(string: explanation, attributes: [
             .font: NSFont.systemFont(ofSize: (13 + (textSize.points - 15) / 2) * scale, weight: .medium),
@@ -138,7 +150,15 @@ enum FeedbackImage {
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = NSGraphicsContext(cgContext: cg, flipped: true)
         for (label, tile) in zip(labels, tiles) {
-            label.draw(with: CGRect(x: tile.minX, y: tile.minY - labelHeight, width: tile.width, height: labelHeight), options: drawingOptions)
+            let textWidth = label.boundingRect(with: CGSize(width: tileWidth, height: .greatestFiniteMagnitude), options: drawingOptions).width.rounded(.up)
+            let pill = CGRect(x: tile.minX, y: tile.minY - labelHeight, width: textWidth + labelInset.width * 2, height: pillHeight)
+            cg.saveGState()
+            cg.setShadow(offset: CGSize(width: 0, height: -2 * scale), blur: 8 * scale, color: NSColor.black.withAlphaComponent(0.25).cgColor)
+            cg.addPath(CGPath(roundedRect: pill, cornerWidth: pillHeight / 2, cornerHeight: pillHeight / 2, transform: nil))
+            cg.setFillColor(NSColor(white: dark ? 0.18 : 1, alpha: 1).cgColor)
+            cg.fillPath()
+            cg.restoreGState()
+            label.draw(with: pill.insetBy(dx: labelInset.width, dy: labelInset.height), options: drawingOptions)
         }
         NSGraphicsContext.restoreGraphicsState()
 

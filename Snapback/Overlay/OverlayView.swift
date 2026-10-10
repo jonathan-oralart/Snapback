@@ -11,6 +11,8 @@ struct OverlayView: View {
     let onDiscard: () -> Void
     /// Steps to an older (+1) or newer (−1) capture in history.
     let onNavigate: (Int) -> Void
+    /// An unsaved new capture sits before the newest in Recent, so → can go back to it.
+    let hasDraft: Bool
 
     @State private var hoveredID: UUID?
     @State private var hoveredCorner: Marker.Corner?
@@ -34,7 +36,7 @@ struct OverlayView: View {
     }
 
     /// `animatesIn` fades the backdrop in when the overlay first opens, but not when stepping through history.
-    init(session: AnnotationSession, animatesIn: Bool, onSend: @escaping () -> Void, onCopy: @escaping () -> Void, onSave: @escaping () -> Void,
+    init(session: AnnotationSession, animatesIn: Bool, hasDraft: Bool, onSend: @escaping () -> Void, onCopy: @escaping () -> Void, onSave: @escaping () -> Void,
          onDiscard: @escaping () -> Void, onNavigate: @escaping (Int) -> Void) {
         self.session = session
         self.onSend = onSend
@@ -42,6 +44,7 @@ struct OverlayView: View {
         self.onSave = onSave
         self.onDiscard = onDiscard
         self.onNavigate = onNavigate
+        self.hasDraft = hasDraft
         _isBackdropShown = State(initialValue: !animatesIn)
     }
 
@@ -444,7 +447,8 @@ struct OverlayView: View {
     /// Where this capture sits in Recent, for the toolbar's arrows.
     private var historyPosition: HistoryPosition {
         let captures = CaptureStore.shared.captures
-        return HistoryPosition(index: session.savedID.flatMap { id in captures.firstIndex { $0.id == id } }, count: captures.count)
+        return HistoryPosition(index: session.savedID.flatMap { id in captures.firstIndex { $0.id == id } }, count: captures.count,
+                               hasDraft: hasDraft)
     }
 
     // MARK: Placement

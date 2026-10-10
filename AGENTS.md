@@ -12,8 +12,6 @@ The Xcode project is generated from `project.yml` with XcodeGen; edit that and r
 
 ## Releasing
 
-When a set of changes is done, commit and push it without asking.
-
 Push main with `scripts/push.sh`, not `git push`: it pushes, then releases the next patch version (1.0.6 → 1.0.7) through `release.sh` if there are `feat:`, `fix:` or `perf:` commits since the last release tag. It needs the sandbox off. Run `release.sh` by hand for a bigger version jump.
 
 `scripts/release.sh <version>` archives, signs with Developer ID (Xcode's cloud-managed certificate), notarizes, makes the DMG, writes Sparkle's `appcast.xml` and publishes both to a GitHub Release. Commit first; the build number is the commit count. Release notes are the `feat:`, `fix:` and `perf:` commit subjects since the last release, so write those for users. Setup and details are in README.md.
@@ -29,8 +27,8 @@ Push main with `scripts/push.sh`, not `git push`: it pushes, then releases the n
 ## Architecture
 
 - `App`: entry point and menu, shortcut, permissions window, `AppWindows` (open windows through it so they come to the front), and `CaptureCoordinator` (capture → overlay → save/send).
-- `Capture`: front window capture with ScreenCaptureKit, and `ScreenRecorder`, which records the front window's display to a temporary HEVC movie (pointer shown, Snapback's own windows such as the stop pill left out, 60s limit).
+- `Capture`: front window capture with ScreenCaptureKit, and `ScreenRecorder`, which records the front window's display to a temporary HEVC movie (pointer shown, Snapback's own windows such as the stop pill left out, 60s limit). Clicks are logged alongside it, not recorded; `Recording` draws them as white rings onto the frames decoded from it, filled while held and hollow once let go. To check their timing, record `scripts/click-calibration.html` in a browser; the steps are on the page.
 - `Overlay`: `Marker` and `AnnotationSession` (frames, crop, selection, undo), `MarkerStyle` (marker drawing, shared with the image), the overlay view, note bubble, toolbar and panel. A screenshot is one frame; a recording (`Recording`: frame times and exact frame decoding) has up to six kept frames, picked on `RecordingTimeline`, with markers numbered across them.
 - `Output`: `FeedbackImage` renders the PNG that's sent: shadowed window (or a recording's frames in a grid) with markers, notes in a card underneath.
 - `Send`: opens `claude://code/new`, then pastes the image using Claude's Paste menu action and plays the sound chosen in Settings (Copy plays it too). The sounds are SND01 "sine" from snd.dev; keep the files unmodified (their terms).
-- `Storage`: the last 20 sent or saved captures in `~/Library/Application Support/Snapback/Captures`, reopened from the menu's Recent submenu or the history window (`UI`). `capture.json` stores markers as `{kind, rect, note}`; keep that format readable. A recording keeps `recording.mov` instead of `window.png`, and its crop and frames (exact movie times) in `capture.json`.
+- `Storage`: the last 20 sent or saved captures in `~/Library/Application Support/Snapback/Captures`, reopened from the menu's Recent submenu or the history window (`UI`). `capture.json` stores markers as `{kind, rect, note}`; keep that format readable. A recording keeps `recording.mov` instead of `window.png`, and its crop, frames (exact movie times) and clicks in `capture.json`.
