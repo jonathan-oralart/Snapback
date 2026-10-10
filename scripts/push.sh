@@ -11,7 +11,8 @@ cd "$(dirname "$0")/.."
 git push origin main
 
 PREVIOUS=$(git describe --tags --abbrev=0 --match 'v*')
-if ! git log --format=%s "$PREVIOUS..HEAD" | grep -qE '^(feat|fix|perf)(\(.*\))?: '; then
+# grep without -q reads everything: stopping at the first match kills git log, which pipefail counts as a failure.
+if ! git log --format=%s "$PREVIOUS..HEAD" | grep -E '^(feat|fix|perf)(\(.*\))?: ' >/dev/null; then
   echo "Nothing user-facing since $PREVIOUS; not releasing."
   exit 0
 fi
