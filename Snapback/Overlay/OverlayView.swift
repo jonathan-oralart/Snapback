@@ -21,7 +21,7 @@ struct OverlayView: View {
     @State private var isBackdropShown: Bool
     @State private var popupSize = CGSize(width: NoteBubble.width, height: 44)
     /// The timeline and toolbar under the screenshot.
-    @State private var controlsSize = CGSize(width: 300, height: 52)
+    @State private var controlsHeight: CGFloat = 52
     /// Showing the whole recorded screen to choose the crop, instead of annotating.
     @State private var isCropping = false
     /// The crop being dragged out, set when the drag ends.
@@ -91,8 +91,10 @@ struct OverlayView: View {
                 OverlayToolbar(hasMarkers: session.hasMarkers, style: $session.style, history: historyPosition,
                                onNavigate: onNavigate, onCopy: onCopy, onSend: onSend)
             }
-            .onGeometryChange(for: CGSize.self, of: \.size) { controlsSize = $0 }
-            .offset(controlsOffset)
+            .onGeometryChange(for: CGFloat.self, of: \.size.height) { controlsHeight = $0 }
+            // Centred by layout rather than a measured offset, so it stays centred while the toolbar grows.
+            .frame(width: screenSize.width)
+            .offset(y: controlsTop)
         }
         .frame(width: screenSize.width, height: screenSize.height, alignment: .topLeading)
         .ignoresSafeArea()
@@ -456,7 +458,7 @@ struct OverlayView: View {
     /// rather than the live app, and smaller still if it's needed to fit the controls underneath.
     private var zoom: CGFloat {
         let window = canvasSize
-        let height = screenSize.height - Self.margin * 2 - Self.toolbarGap - controlsSize.height
+        let height = screenSize.height - Self.margin * 2 - Self.toolbarGap - controlsHeight
         let width = screenSize.width - Self.margin * 2
         return min(0.9, height / window.height, width / window.width)
     }
@@ -465,7 +467,7 @@ struct OverlayView: View {
     private var imageRect: CGRect {
         let window = canvasSize
         let size = CGSize(width: window.width * zoom, height: window.height * zoom)
-        let space = controlsOffset.height - Self.toolbarGap - Self.margin
+        let space = controlsTop - Self.toolbarGap - Self.margin
         return CGRect(x: (screenSize.width - size.width) / 2, y: Self.margin + (space - size.height) / 2, width: size.width, height: size.height)
     }
 
@@ -523,9 +525,9 @@ struct OverlayView: View {
         }
     }
 
-    /// Centred at the bottom of the screen, so the toolbar stays put whatever the screenshot's size.
-    private var controlsOffset: CGSize {
-        CGSize(width: (screenSize.width - controlsSize.width) / 2, height: screenSize.height - Self.margin - controlsSize.height)
+    /// At the bottom of the screen, so the toolbar stays put whatever the screenshot's size.
+    private var controlsTop: CGFloat {
+        screenSize.height - Self.margin - controlsHeight
     }
 
     /// As wide as the screenshot, within reason.
