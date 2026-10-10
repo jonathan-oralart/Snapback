@@ -1,7 +1,7 @@
 import AppKit
 import ScreenCaptureKit
 
-/// Runs one capture: grab the front window, annotate it in place, then save or send it.
+/// Runs one capture: grab the front window, annotate it in place, then save or copy it.
 final class CaptureCoordinator {
     static let shared = CaptureCoordinator()
 
@@ -9,7 +9,7 @@ final class CaptureCoordinator {
     private var captureTask: Task<Void, Never>?
     private var pill: RecordingPill?
     #if DEBUG
-    /// The real overlay session and send progress, for demo takes.
+    /// The real overlay session and copy progress, for demo takes.
     private(set) var demoSession: AnnotationSession?
     private(set) var demoIsSending = false
 
@@ -121,7 +121,7 @@ final class CaptureCoordinator {
         }
     }
 
-    /// Opens a saved capture in the overlay to change and send again.
+    /// Opens a saved capture in the overlay to change and copy again.
     func reopen(_ saved: SavedCapture) {
         guard panel == nil, !ScreenRecorder.shared.isRecording else { return }
         Task {
@@ -185,6 +185,7 @@ final class CaptureCoordinator {
     }
 
     /// Where a capture goes when the overlay closes. It's always kept in Recent as well.
+    /// `chat` copies it and brings Claude or Codex, as chosen in Settings, to the front to paste it into.
     private enum Destination {
         case recent, chat, clipboard
     }
@@ -197,17 +198,25 @@ final class CaptureCoordinator {
         #if DEBUG
         demoIsSending = destination == .chat
         #endif
+        let screen = panel?.screen
         // Close first so the overlay is gone the moment you press the button; render once it's off screen.
         dismiss()
-        // Copy sounds the moment you press it; the image follows once rendered.
-        if destination == .clipboard { SendSound.current.play() }
+        // Copy sounds and shows the moment you press it; the image follows once rendered.
+        switch destination {
+        case .recent: break
+        case .chat: CopiedToast.show("Copied — paste with ⌘V", on: screen)
+        case .clipboard: CopiedToast.show("Copied to clipboard", on: screen)
+        }
+        if destination != .recent { SendSound.current.play() }
         Task {
             await Task.yield()
             let png = FeedbackImage.png(for: session)
             // Deliver before saving to history, so the image and sound don't wait on writing files.
             switch destination {
             case .recent: break
-            case .chat: await Sender.send(png)
+            case .chat:
+                Clipboard.copy(png: png)
+                AppActivator.activate(SendTarget.current)
             case .clipboard: Clipboard.copy(png: png)
             }
             CaptureStore.shared.save(session, png: png)

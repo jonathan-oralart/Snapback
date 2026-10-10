@@ -1,6 +1,6 @@
 import Foundation
 
-/// The app a capture is sent to, chosen in Settings: a new Claude Code session or a new Codex thread.
+/// The app Copy & Open switches to, chosen in Settings.
 enum SendTarget: String, CaseIterable, Identifiable {
     case claude
     case codex
@@ -20,13 +20,6 @@ enum SendTarget: String, CaseIterable, Identifiable {
         switch self {
         case .claude: "com.anthropic.claudefordesktop"
         case .codex: "com.openai.codex"
-        }
-    }
-
-    var newChatURL: URL {
-        switch self {
-        case .claude: URL(string: "claude://code/new")!
-        case .codex: URL(string: "codex://threads/new")!
         }
     }
 

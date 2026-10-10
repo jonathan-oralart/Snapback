@@ -17,7 +17,7 @@ struct HistoryPosition {
     var slot: Int { slots - 1 - (index.map { $0 + (hasDraft ? 1 : 0) } ?? 0) }
 }
 
-/// History arrows, marker colour and size, and Send, under the screenshot. Closing is done by clicking the background.
+/// History arrows, marker colour and size, Copy and Copy & Open, under the screenshot. Closing is done by clicking the background.
 struct OverlayToolbar: View {
     @Binding var style: MarkerStyle
     @AppStorage(SendTarget.defaultsKey) private var sendTarget = SendTarget.claude
@@ -41,10 +41,10 @@ struct OverlayToolbar: View {
             .buttonStyle(CapsuleButtonStyle())
             .tooltip("Copy the annotated image", shortcut: KeyboardShortcuts.Name.copy.symbols)
             Button(action: onSend) {
-                Label("Send to \(sendTarget.title)", systemImage: "paperplane.fill")
+                Label("Copy & Open \(sendTarget.title)", systemImage: "arrow.up.forward.app")
             }
             .buttonStyle(CapsuleButtonStyle(isProminent: true))
-            .tooltip(sendTarget == .claude ? "Send to a new Claude Code chat" : "Send to a new Codex chat", shortcut: KeyboardShortcuts.Name.send.symbols)
+            .tooltip("Copy the annotated image and switch to \(sendTarget.title) to paste it (⌘V)", shortcut: KeyboardShortcuts.Name.send.symbols)
             #if DEBUG
             .onGeometryChange(for: CGRect.self, of: { $0.frame(in: .global) }) { DemoTake.sendButton = $0 }
             #endif

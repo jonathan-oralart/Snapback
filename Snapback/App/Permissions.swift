@@ -3,7 +3,7 @@ import ApplicationServices
 import PermissionFlow
 import SwiftUI
 
-/// What Snapback needs from macOS: capture to see the window, Accessibility to paste into Claude or Codex.
+/// What Snapback needs from macOS: capture to see the window, Accessibility to tell which window is in front and to focus Claude's or Codex's message box.
 enum Permission: CaseIterable, Identifiable {
     case screenRecording
     case accessibility
@@ -20,7 +20,7 @@ enum Permission: CaseIterable, Identifiable {
     var purpose: String {
         switch self {
         case .screenRecording: "Captures the front window, and records the screen."
-        case .accessibility: "Pastes the screenshot into Claude or Codex."
+        case .accessibility: "Finds the front window to capture, and puts the cursor in Claude's or Codex's message box."
         }
     }
 

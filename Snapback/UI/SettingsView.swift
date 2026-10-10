@@ -28,12 +28,12 @@ struct SettingsView: View {
                             opensAtLogin = SMAppService.mainApp.status == .enabled
                         }
                     }
-                Picker("Send to", selection: $sendTarget) {
+                Picker("Copy & Open", selection: $sendTarget) {
                     ForEach(SendTarget.allCases) { target in
                         Text(target.title).tag(target)
                     }
                 }
-                Picker("Sound when sent or copied", selection: $sendSound) {
+                Picker("Sound when copied", selection: $sendSound) {
                     ForEach(SendSound.allCases) { sound in
                         Text(sound.title).tag(sound)
                     }
@@ -51,12 +51,12 @@ struct SettingsView: View {
             } header: {
                 Text("Exported image (dev build)")
             } footer: {
-                Text("Controls the numbered notes below the screenshot when you send or copy an image.")
+                Text("Controls the numbered notes below the screenshot when you copy an image.")
             }
             #endif
 
             Section {
-                KeyboardShortcuts.Recorder("Send to \(sendTarget.title)", name: .send, onChange: KeyboardShortcuts.Name.send.takeShortcut)
+                KeyboardShortcuts.Recorder("Copy and open \(sendTarget.title)", name: .send, onChange: KeyboardShortcuts.Name.send.takeShortcut)
                 KeyboardShortcuts.Recorder("Copy image", name: .copy, onChange: KeyboardShortcuts.Name.copy.takeShortcut)
                 KeyboardShortcuts.Recorder("Close without saving", name: .discard, onChange: KeyboardShortcuts.Name.discard.takeShortcut)
                 FixedShortcut("Marker size", keys: "−  +")
