@@ -86,7 +86,7 @@ private struct StyleControls: View {
     var body: some View {
         HStack(spacing: 14) {
             Button {
-                withAnimation(.snappy(duration: 0.25)) { isExpanded.toggle() }
+                withAnimation(.spring(duration: 0.35, bounce: 0.15)) { isExpanded.toggle() }
             } label: {
                 HStack(spacing: 5) {
                     Circle().fill(Color(nsColor: style.color))
@@ -108,7 +108,8 @@ private struct StyleControls: View {
 
             if isExpanded {
                 options
-                    .transition(.opacity.combined(with: .move(edge: .leading)))
+                    // Grows out of the dot while the toolbar widens, instead of sliding in from behind it.
+                    .transition(.blurReplace.combined(with: .scale(0.6, anchor: .leading)))
             }
         }
         .padding(.leading, 2)
